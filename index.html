@@ -30,11 +30,12 @@ header p { color: #c4972a; font-size: 0.9rem; }
 .calendar-day.selected { background: #8b6914; color: white; border-color: #8b6914; }
 .calendar-day.has-slot::after { content: ''; position: absolute; bottom: 3px; width: 4px; height: 4px; border-radius: 50%; background: #4a7c59; }
 .slots-section { background: #fff; border: 1px solid #e8ddd0; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; min-height: 120px; }
-.slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.75rem; margin-top: 1rem; }
+.slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem; margin-top: 1rem; }
 .slot-btn { padding: 0.7rem; border-radius: 8px; border: 1.5px solid #e8ddd0; background: white; cursor: pointer; text-align: center; font-size: 0.9rem; font-family: 'Noto Sans TC', sans-serif; color: #2c2416; transition: all 0.15s; }
 .slot-btn:hover { border-color: #4a7c59; background: #f0f8f3; }
-.slot-btn.booked { background: #fdf0ef; border-color: #f0c0bc; color: #c0392b; cursor: not-allowed; }
+.slot-btn.full { background: #fdf0ef; border-color: #f0c0bc; color: #c0392b; cursor: not-allowed; }
 .slot-btn.selected { background: #4a7c59; border-color: #4a7c59; color: white; }
+.slot-time { font-size: 0.9rem; font-weight: 500; }
 .slot-status { font-size: 0.7rem; margin-top: 2px; opacity: 0.8; }
 .no-slots { color: #9e8e7a; text-align: center; padding: 2rem; font-size: 0.9rem; }
 .form-section { background: #fff; border: 1px solid #e8ddd0; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; display: none; }
@@ -55,7 +56,6 @@ textarea { resize: vertical; min-height: 80px; }
 .message { padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.95rem; display: none; }
 .message.success { background: #eafaf1; border: 1px solid #82c9a0; color: #2d7a4f; display: block; }
 .message.error { background: #fdf0ef; border: 1px solid #f0c0bc; color: #c0392b; display: block; }
-.loading { text-align: center; color: #9e8e7a; padding: 1.5rem; font-size: 0.9rem; }
 footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; border-top: 1px solid #e8ddd0; }
 .last-update { text-align: right; font-size: 0.75rem; color: #9e8e7a; margin-bottom: 1rem; }
 </style>
@@ -89,19 +89,19 @@ footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; b
     <div class="form-selected-info" id="selectedInfo"></div>
     <div class="form-group">
       <label>姓名 <span class="required">*</span></label>
-      <input type="text" id="name" placeholder="請輸入您的姓名">
+      <input type="text" id="name" placeholder="請輸入您的姓名" autocomplete="name">
     </div>
     <div class="form-group">
       <label>電話 <span class="required">*</span></label>
-      <input type="tel" id="phone" placeholder="請輸入聯絡電話">
+      <input type="tel" id="phone" placeholder="請輸入聯絡電話" autocomplete="tel">
     </div>
     <div class="form-group">
       <label>Email <span class="required">*</span></label>
-      <input type="email" id="email" placeholder="預約結果將寄送至此信箱">
+      <input type="email" id="email" placeholder="預約結果將寄送至此信箱" autocomplete="email">
     </div>
     <div class="form-group">
       <label>Line ID（選填）</label>
-      <input type="text" id="lineId" placeholder="選填">
+      <input type="text" id="lineId" placeholder="選填" autocomplete="off">
     </div>
     <div class="form-group">
       <label>症狀描述（選填）</label>
@@ -115,7 +115,6 @@ footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; b
   </div>
 </div>
 <footer>預約送出後請留意 Email 信箱，店家確認後將寄送通知。如需取消請提前來電。</footer>
-
 <script>
 var SLOTS_JSON = "slots.json";
 var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzv7x0sBpPsrh5yHpWwmerlvmNTsoHmdCyNtXuFtLxjehTPIkIyTvMwoj8qbNzvHNuIFg/exec";
@@ -127,13 +126,17 @@ window.onload = function() {
   var now = new Date();
   currentYear = now.getFullYear();
   currentMonth = now.getMonth();
+  renderCalendar();
   loadSlotsJson();
 };
 
 function loadSlotsJson() {
   fetch(SLOTS_JSON + "?t=" + Date.now())
-    .then(function(r){ return r.json(); })
-    .then(function(data){
+    .then(function(r) {
+      if (!r.ok) throw new Error("not found");
+      return r.json();
+    })
+    .then(function(data) {
       slotsData = data.slots || {};
       var shop = data.shop || {};
       if (shop.shop_name) document.getElementById("shopName").textContent = shop.shop_name;
@@ -150,8 +153,10 @@ function loadSlotsJson() {
       }
       document.getElementById("lastUpdate").textContent = "資料更新時間：" + new Date().toLocaleTimeString("zh-TW");
       renderCalendar();
+      if (selectedDate) showSlots(selectedDate);
     })
-    .catch(function(){
+    .catch(function() {
+      slotsData = {};
       renderCalendar();
     });
 }
@@ -161,7 +166,7 @@ function renderCalendar() {
   document.getElementById("calendarTitle").textContent = currentYear + " 年 " + months[currentMonth];
   var grid = document.getElementById("calendarGrid");
   grid.innerHTML = "";
-  ["日","一","二","三","四","五","六"].forEach(function(d){
+  ["日","一","二","三","四","五","六"].forEach(function(d) {
     var el = document.createElement("div");
     el.className = "calendar-header";
     el.textContent = d;
@@ -187,10 +192,10 @@ function renderCalendar() {
     } else {
       if (thisDate.getTime() === today.getTime()) el.classList.add("today");
       if (selectedDate === ds) el.classList.add("selected");
-      if (slotsData[ds] && slotsData[ds].some(function(s){ return s.available; })) {
+      if (slotsData[ds] && slotsData[ds].some(function(s) { return s.available; })) {
         el.classList.add("has-slot");
       }
-      (function(dateStr, elem){ elem.onclick = function(){ selectDate(dateStr); }; })(ds, el);
+      (function(dateStr, elem) { elem.onclick = function() { selectDate(dateStr); }; })(ds, el);
     }
     grid.appendChild(el);
   }
@@ -225,13 +230,15 @@ function showSlots(dateStr) {
   var parts = dateStr.split("-");
   section.innerHTML = '<div style="font-size:0.9rem;color:#9e8e7a">' + parts[0] + ' 年 ' + parseInt(parts[1]) + ' 月 ' + parseInt(parts[2]) + ' 日</div><div class="slots-grid" id="slotsGrid"></div>';
   var grid = document.getElementById("slotsGrid");
-  slots.forEach(function(slot){
+  slots.forEach(function(slot) {
     var btn = document.createElement("button");
-    btn.className = "slot-btn" + (slot.available ? "" : " booked");
-    btn.innerHTML = slot.time + '<div class="slot-status">' + (slot.available ? "可預約" : "已預約") + '</div>';
-    if (slot.available) {
-      btn.onclick = function(){
-        document.querySelectorAll(".slot-btn").forEach(function(b){ b.classList.remove("selected"); });
+    var isFull = !slot.available;
+    btn.className = "slot-btn" + (isFull ? " full" : "");
+    var statusText = isFull ? "已額滿" : (slot.quota > 1 ? "剩餘 " + slot.remaining + " 名" : "可預約");
+    btn.innerHTML = '<div class="slot-time">' + slot.time + '</div><div class="slot-status">' + statusText + '</div>';
+    if (!isFull) {
+      btn.onclick = function() {
+        document.querySelectorAll(".slot-btn").forEach(function(b) { b.classList.remove("selected"); });
         btn.classList.add("selected");
         selectedTime = slot.time;
         showForm();
@@ -260,33 +267,31 @@ function submitBooking() {
   var btn = document.getElementById("submitBtn");
   btn.disabled = true; btn.textContent = "送出中...";
   var params = "action=addBooking" +
-  "&name=" + encodeURIComponent(name) +
-  "&phone=" + encodeURIComponent(phone) +
-  "&email=" + encodeURIComponent(email) +
-  "&lineId=" + encodeURIComponent(lineId) +
-  "&date=" + encodeURIComponent(selectedDate) +
-  "&time=" + encodeURIComponent(selectedTime) +
-  "&symptom=" + encodeURIComponent(symptom);
-
-var img = new Image();
-img.src = APPS_SCRIPT_URL + "?" + params;
-
-showMessage("✅ 預約申請已送出！請留意 Email 信箱，店家確認後將寄送通知給您。", "success");
-document.getElementById("formSection").classList.remove("visible");
-["name","phone","email","lineId","symptom"].forEach(function(id){ document.getElementById(id).value = ""; });
-selectedTime = null;
-btn.disabled = false;
-btn.textContent = "送出預約申請";
+    "&name=" + encodeURIComponent(name) +
+    "&phone=" + encodeURIComponent(phone) +
+    "&email=" + encodeURIComponent(email) +
+    "&lineId=" + encodeURIComponent(lineId) +
+    "&date=" + encodeURIComponent(selectedDate) +
+    "&time=" + encodeURIComponent(selectedTime) +
+    "&symptom=" + encodeURIComponent(symptom);
+  var img = new Image();
+  img.src = APPS_SCRIPT_URL + "?" + params;
+  showMessage("✅ 預約申請已送出！請留意 Email 信箱，店家確認後將寄送通知給您。", "success");
+  document.getElementById("formSection").classList.remove("visible");
+  ["name","phone","email","lineId","symptom"].forEach(function(id) { document.getElementById(id).value = ""; });
+  selectedTime = null;
+  btn.disabled = false;
+  btn.textContent = "送出預約申請";
 }
-  
+
 function showMessage(text, type) {
   var el = document.getElementById("message");
   el.textContent = text; el.className = "message " + type;
   el.scrollIntoView({behavior:"smooth"});
-  if (type === "error") setTimeout(function(){ el.className = "message"; }, 6000);
+  if (type === "error") setTimeout(function() { el.className = "message"; }, 6000);
 }
 
-setInterval(loadSlotsJson, 10 * 60 * 1000);
+setInterval(loadSlotsJson, 5 * 60 * 1000);
 </script>
 </body>
 </html>
