@@ -278,6 +278,7 @@ function submitBooking() {
   })
   .catch(function(){ showMessage("網路錯誤，請稍後再試", "error"); })
   .finally(function(){ btn.disabled = false; btn.textContent = "送出預約申請"; });
+}
 
 function showMessage(text, type) {
   var el = document.getElementById("message");
