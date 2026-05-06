@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>推拿預約系統</title>
+<title>七喜推拿預約</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -57,7 +57,7 @@ footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; b
 </head>
 <body>
 <header>
-  <h1 id="shopName">推拿預約</h1>
+  <h1 id="shopName">七喜推拿</h1>
   <p id="shopHours">載入中...</p>
 </header>
 <div class="container">
@@ -191,3 +191,4 @@ function selectDate(dateStr) {
 
 function loadSlots(dateStr) {
   var section = document.getElementById("slotsSection");
+  section.innerHTML =
