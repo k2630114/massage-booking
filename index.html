@@ -259,23 +259,25 @@ function submitBooking() {
   if (!selectedDate || !selectedTime) { showMessage("請選擇預約日期和時段", "error"); return; }
   var btn = document.getElementById("submitBtn");
   btn.disabled = true; btn.textContent = "送出中...";
+  var payload = JSON.stringify({
+    name: name, phone: phone, email: email,
+    lineId: lineId, date: selectedDate,
+    time: selectedTime, symptom: symptom
+  });
   fetch(APPS_SCRIPT_URL, {
     method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({name:name, phone:phone, email:email, lineId:lineId, date:selectedDate, time:selectedTime, symptom:symptom})
-  }).then(function(r){ return r.json(); })
-  .then(function(res){
-    if (res.status === "ok") {
-      showMessage("✅ 預約申請已送出！\n\n請留意您的 Email 信箱，店家確認後將寄送通知給您。\n如有加入官方 Line 也會收到通知。", "success");
-      document.getElementById("formSection").classList.remove("visible");
-      ["name","phone","email","lineId","symptom"].forEach(function(id){ document.getElementById(id).value = ""; });
-      selectedTime = null;
-    } else {
-      showMessage("送出失敗，請稍後再試", "error");
-    }
-  }).catch(function(){ showMessage("網路錯誤，請稍後再試", "error"); })
+    mode: "no-cors",
+    headers: {"Content-Type": "text/plain"},
+    body: payload
+  })
+  .then(function() {
+    showMessage("✅ 預約申請已送出！請留意 Email 信箱，店家確認後將寄送通知。", "success");
+    document.getElementById("formSection").classList.remove("visible");
+    ["name","phone","email","lineId","symptom"].forEach(function(id){ document.getElementById(id).value = ""; });
+    selectedTime = null;
+  })
+  .catch(function(){ showMessage("網路錯誤，請稍後再試", "error"); })
   .finally(function(){ btn.disabled = false; btn.textContent = "送出預約申請"; });
-}
 
 function showMessage(text, type) {
   var el = document.getElementById("message");
