@@ -127,6 +127,7 @@ window.onload = function() {
   var now = new Date();
   currentYear = now.getFullYear();
   currentMonth = now.getMonth();
+  renderCalendar();
   loadSlotsJson();
 };
 
@@ -151,7 +152,8 @@ function loadSlotsJson() {
       document.getElementById("lastUpdate").textContent = "資料更新時間：" + new Date().toLocaleTimeString("zh-TW");
       renderCalendar();
     })
-    .catch(function(){
+     .catch(function(){
+      slotsData = {};
       renderCalendar();
     });
 }
