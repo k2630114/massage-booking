@@ -337,8 +337,8 @@ footer {
         <p id="aboutText">載入中...</p>
         <a href="booking.html" class="btn-primary" style="display:inline-block;margin-top:1.5rem">立即預約</a>
       </div>
-      <div class="about-img">
-        <p>店家照片</p>
+      <div class="about-img" id="aboutImgBox">
+        <p style="color:#aaa">（尚未上傳店家照片）</p>
       </div>
     </div>
   </div>
@@ -441,6 +441,19 @@ function renderSite(data) {
     var audio = document.getElementById("bgMusic");
     audio.src = data.shop_music;
     document.getElementById("musicBtn").style.display = "block";
+  }
+
+  // 店家圖片
+  if (data.shop_images && data.shop_images.length > 0) {
+    var box = document.getElementById("aboutImgBox");
+    box.innerHTML = "";
+    data.shop_images.forEach(function(url, i) {
+      var img = document.createElement("img");
+      img.src = url;
+      img.alt = "店家照片 " + (i+1);
+      img.style.cssText = "width:100%;border-radius:12px;margin-bottom:12px;object-fit:cover;max-height:320px;";
+      box.appendChild(img);
+    });
   }
 }
 
