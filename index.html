@@ -94,6 +94,7 @@ nav {
   margin-bottom: 3rem;
 }
 .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+.service-hint { font-size:0.75rem; color:var(--accent); margin-top:0.3rem; opacity:0.8; }
 .btn-primary {
   background: var(--accent);
   color: white;
@@ -277,6 +278,19 @@ footer {
 
 <audio id="bgMusic" loop></audio>
 
+<!-- 服務說明 Modal -->
+<div id="serviceModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+     background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:2rem;max-width:480px;width:90%;position:relative;">
+    <button onclick="closeModal()" style="position:absolute;top:1rem;right:1rem;background:none;
+            border:none;font-size:1.5rem;cursor:pointer;color:#666;">✕</button>
+    <h3 id="modalTitle" style="font-family:'Noto Serif TC',serif;color:#2c2416;margin-bottom:1rem;font-size:1.4rem;"></h3>
+    <p id="modalDesc" style="color:#555;line-height:1.9;font-size:0.95rem;"></p>
+    <a href="booking.html" style="display:inline-block;margin-top:1.5rem;background:#8b6914;
+       color:white;padding:0.7rem 2rem;border-radius:8px;text-decoration:none;">立即預約</a>
+  </div>
+</div>
+
 <nav>
   <div class="nav-logo" id="navLogo">推拿養生館</div>
   <div class="nav-links">
@@ -405,7 +419,14 @@ function renderSite(data) {
     document.getElementById("heroIntro").textContent = data.shop_intro;
     document.getElementById("aboutText").textContent = data.shop_intro;
   }
-  if (data.shop_address) document.getElementById("contactAddress").textContent = data.shop_address;
+  if (data.shop_address) {
+    var addrEl = document.getElementById("contactAddress");
+    if (data.shop_map_url) {
+      addrEl.innerHTML = '<a href="' + data.shop_map_url + '" target="_blank" style="color:#c4972a;text-decoration:underline;">' + data.shop_address + ' 📍</a>';
+    } else {
+      addrEl.textContent = data.shop_address;
+    }
+  }
   if (data.shop_phone) document.getElementById("contactPhone").textContent = data.shop_phone;
   if (data.shop_hours) document.getElementById("contactHours").textContent = data.shop_hours;
   document.getElementById("footerText").textContent = "© " + name + " 版權所有";
@@ -416,10 +437,17 @@ function renderSite(data) {
     var grid = document.getElementById("servicesGrid");
     grid.innerHTML = "";
     data.shop_services.forEach(function(s, i) {
+      var name = typeof s === "object" ? (s.name||"") : s;
+      var desc = typeof s === "object" ? (s.desc||"") : "";
       var card = document.createElement("div");
       card.className = "service-card";
+      card.style.cursor = desc ? "pointer" : "default";
       card.innerHTML = '<div class="service-icon">' + (icons[i % icons.length]) + '</div>' +
-                       '<div class="service-name">' + s + '</div>';
+                       '<div class="service-name">' + name + '</div>' +
+                       (desc ? '<div class="service-hint">點擊了解更多</div>' : "");
+      if (desc) {
+        card.onclick = function() { showServiceModal(name, desc); };
+      }
       grid.appendChild(card);
     });
   }
@@ -457,6 +485,32 @@ function renderSite(data) {
     });
   }
 }
+
+function showServiceModal(name, desc) {
+  document.getElementById("modalTitle").textContent = name;
+  document.getElementById("modalDesc").textContent = desc;
+  document.getElementById("serviceModal").style.display = "flex";
+}
+function closeModal() {
+  document.getElementById("serviceModal").style.display = "none";
+}
+
+// 音樂 - 使用者互動後自動播
+var musicAutoStarted = false;
+function tryAutoPlayMusic() {
+  if (musicAutoStarted) return;
+  var audio = document.getElementById("bgMusic");
+  if (audio && audio.src) {
+    audio.play().then(function() {
+      musicAutoStarted = true;
+      musicPlaying = true;
+      var btn = document.getElementById("musicBtn");
+      if (btn) btn.textContent = "⏸ 暫停";
+    }).catch(function(){});
+  }
+}
+document.addEventListener("click", tryAutoPlayMusic, {once: true});
+document.addEventListener("scroll", tryAutoPlayMusic, {once: true});
 
 function toggleMusic() {
   var audio = document.getElementById("bgMusic");
