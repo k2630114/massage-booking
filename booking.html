@@ -323,7 +323,8 @@ function showMessage(text, type) {
 
 function submitBooking() {
   var name = document.getElementById("name").value.trim();
-  var phone = document.getElementById("phone").value.trim();
+  var phone = document.getElementById("phone").value.trim().replace(/\s/g,"");
+  if (phone && !phone.startsWith("0")) phone = "0" + phone;
   var email = document.getElementById("email").value.trim();
   var lineId = document.getElementById("lineId").value.trim();
   var symptom = document.getElementById("symptom").value.trim();
@@ -399,8 +400,8 @@ function queryBooking() {
       // 驗證姓名、電話、時段
       var nameMatch = data.name && data.name.trim() === name;
       // 電話比對：去掉前導0和空白
-      var normPhone = phone.replace(/\s/g,'').replace(/^0+/,'');
-      var dataPhone = (data.phone||'').toString().replace(/\s/g,'').replace(/^0+/,'');
+      var normPhone = phone.replace(/[-\s]/g,'');
+      var dataPhone = (data.phone||'').toString().replace(/[-\s]/g,'');
       var phoneMatch = dataPhone === normPhone;
       var timeMatch = data.time && data.time.toString().trim() === timeSlot;
       if (!nameMatch || !phoneMatch || !timeMatch) {
