@@ -195,7 +195,7 @@ function getToken() {
   return params.get("token") || "";
 }
 
-// 載入 site.json 取得 Apps Script URL
+// 載入 site.json 取得 Apps Script URL 和店名
 fetch("site.json?t=" + Date.now())
   .then(function(r) { return r.json(); })
   .then(function(data) {
@@ -204,18 +204,17 @@ fetch("site.json?t=" + Date.now())
       document.getElementById("shopName").textContent = data.shop_name;
       document.title = "取消預約 - " + data.shop_name;
     }
+  })
+  .catch(function(){})
+  .finally(function() {
     cancelToken = getToken();
     if (!cancelToken) {
       showResult("❌","連結無效","此取消連結無效，請聯繫店家。");
       return;
     }
-    loadBooking();
-  })
-  .catch(function() {
-    cancelToken = getToken();
-    if (!cancelToken) {
-      showResult("❌","連結無效","此取消連結無效，請聯繫店家。");
-      return;
+    // 如果 APPS_SCRIPT_URL 還是空的，用預設值
+    if (!APPS_SCRIPT_URL) {
+      APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzv7x0sBpPsrh5yHpWwmerlvmNTsoHmdCyNtXuFtLxjehTPIkIyTvMwoj8qbNzvHNuIFg/exec";
     }
     loadBooking();
   });
