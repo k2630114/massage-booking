@@ -398,7 +398,10 @@ function queryBooking() {
       }
       // 驗證姓名、電話、時段
       var nameMatch = data.name && data.name.trim() === name;
-      var phoneMatch = data.phone && data.phone.toString().trim() === phone;
+      // 電話比對：去掉前導0和空白
+      var normPhone = phone.replace(/\s/g,'').replace(/^0+/,'');
+      var dataPhone = (data.phone||'').toString().replace(/\s/g,'').replace(/^0+/,'');
+      var phoneMatch = dataPhone === normPhone;
       var timeMatch = data.time && data.time.toString().trim() === timeSlot;
       if (!nameMatch || !phoneMatch || !timeMatch) {
         showCancelMessage("資料驗證失敗，請確認姓名、電話及時段是否正確。", "error"); return;
