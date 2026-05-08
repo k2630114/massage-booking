@@ -136,7 +136,8 @@ footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; b
     <h2 class="section-title" style="color:#c0392b;border-left-color:#c0392b;">查詢 / 取消預約</h2>
     <div class="cancel-notice">
       ⚠️ 取消預約需輸入預約單號、姓名、電話及預約時段，四項資料須完全正確才可辦理。<br>
-      預約單號請見確認 Email，格式為 <strong>LYC-日期-英數</strong>。
+      預約單號請見確認 Email，格式為 <strong>LYC-日期-英數</strong>（例：LYC-20260508-A3K9）。<br>
+      電話請輸入預約時填寫的號碼（含開頭0）。
     </div>
     <div class="form-group">
       <label>預約單號 <span class="required">*</span></label>
@@ -288,12 +289,29 @@ function showSlots(dateStr) {
     section.innerHTML = '<div class="no-slots">此日期暫無可預約時段</div>';
     return;
   }
+  // 過濾已過去的時段
+  var now = new Date();
+  var todayStr = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0") + "-" + String(now.getDate()).padStart(2,"0");
+  if (dateStr === todayStr) {
+    slots = slots.filter(function(s) {
+      var endTime = s.time.split("-")[1];
+      if (!endTime) return true;
+      var parts = endTime.split(":");
+      var slotEnd = new Date();
+      slotEnd.setHours(parseInt(parts[0]), parseInt(parts[1]), 0, 0);
+      return slotEnd > now;
+    });
+    if (slots.length === 0) {
+      section.innerHTML = '<div class="no-slots">今日時段已全部結束</div>';
+      return;
+    }
+  }
   var html = '<div class="slots-grid">';
   slots.forEach(function(s) {
     if (s.available) {
       html += '<button class="slot-btn' + (selectedTime===s.time?' selected':'') + '" onclick="selectSlot(\'' + s.time + '\')">' +
         '<div class="slot-time">' + s.time + '</div>' +
-        '<div class="slot-status">可預約</div></button>';
+        '<div class="slot-status">' + (s.remaining !== undefined && s.quota > 1 ? '可預約（剩 ' + s.remaining + '/' + s.quota + ' 位）' : '可預約') + '</div></button>';
     } else {
       html += '<button class="slot-btn full" disabled>' +
         '<div class="slot-time">' + s.time + '</div>' +
