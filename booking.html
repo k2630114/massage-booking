@@ -122,7 +122,7 @@ footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; b
     </div>
     <div class="form-group">
       <label>症狀描述（選填）</label>
-      <textarea id="symptom" placeholder="請描述您的不適部位或需求或指定技師..."></textarea>
+      <textarea id="symptom" placeholder="請描述您的不適部位或需求..."></textarea>
     </div>
     <div class="line-notice" id="lineNotice">
       <p>📱 加入官方 Line 可接收預約通知（建議加入）</p>
@@ -137,7 +137,7 @@ footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; b
     <div class="cancel-notice">
       ⚠️ 取消預約需輸入預約單號、姓名、電話及預約時段，四項資料須完全正確才可辦理。<br>
       預約單號請見確認 Email，格式為 <strong>LYC-日期-英數</strong>（例：LYC-20260508-A3K9）。<br>
-      電話請輸入預約時填寫的號碼（開頭的0不要打，謝謝!）。
+      電話請輸入預約時填寫的號碼（含開頭0）。
     </div>
     <div class="form-group">
       <label>預約單號 <span class="required">*</span></label>
@@ -359,8 +359,7 @@ function submitBooking() {
     "&date=" + encodeURIComponent(selectedDate) +
     "&time=" + encodeURIComponent(selectedTime) +
     "&symptom=" + encodeURIComponent(symptom);
-  fetch(APPS_SCRIPT_URL + params)
-    .then(function(r) { return r.json(); })
+  fetchWithRetry(APPS_SCRIPT_URL + params)
     .then(function(data) {
       if (data.status === "ok") {
         showMessage("✅ 預約申請已送出！請留意 Email 信箱，確認信將附上預約單號。", "success");
@@ -390,6 +389,26 @@ function showCancelMessage(text, type) {
   if (type === "error") setTimeout(function(){ el.className = "message"; }, 6000);
 }
 
+// fetch 失敗自動重試
+function fetchWithRetry(url, retries) {
+  retries = retries || 2;
+  return fetch(url)
+    .then(function(r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .catch(function(err) {
+      if (retries > 0) {
+        return new Promise(function(resolve) {
+          setTimeout(function() {
+            resolve(fetchWithRetry(url, retries - 1));
+          }, 2000);
+        });
+      }
+      throw err;
+    });
+}
+
 function queryBooking() {
   var bookingId = document.getElementById("cancelBookingId").value.trim().toUpperCase();
   var name = document.getElementById("cancelName").value.trim();
@@ -407,8 +426,7 @@ function queryBooking() {
   document.getElementById("cancelMessage").className = "message";
 
   var url = APPS_SCRIPT_URL + "?action=getBookingById&booking_id=" + encodeURIComponent(bookingId);
-  fetch(url)
-    .then(function(r) { return r.json(); })
+  fetchWithRetry(url)
     .then(function(data) {
       btn.disabled = false;
       btn.textContent = "查詢預約";
@@ -457,8 +475,7 @@ function confirmCancel() {
 
   // 送出取消申請給 GS，讓 Python 判斷取消政策
   var url = APPS_SCRIPT_URL + "?action=requestCancel&booking_id=" + encodeURIComponent(cancelToken);
-  fetch(url)
-    .then(function(r) { return r.json(); })
+  fetchWithRetry(url)
     .then(function(data) {
       if (data.status === "ok") {
         document.getElementById("cancelResult").classList.remove("visible");
