@@ -344,7 +344,7 @@ function submitBooking() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.status === "ok") {
-        showMessage("✅ 預約申請已送出！預約單號：" + (data.booking_id || "") + "，請留意 Email 通知。", "success");
+        showMessage("✅ 預約申請已送出！請留意 Email 信箱，確認信將附上預約單號。", "success");
         document.getElementById("formSection").classList.remove("visible");
         ["name","phone","email","lineId","symptom"].forEach(function(id){ document.getElementById(id).value = ""; });
         selectedDate = null; selectedTime = null;
