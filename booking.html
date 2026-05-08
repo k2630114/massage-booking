@@ -58,6 +58,22 @@ textarea { resize: vertical; min-height: 80px; }
 .message.error { background: #fdf0ef; border: 1px solid #f0c0bc; color: #c0392b; display: block; }
 footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; border-top: 1px solid #e8ddd0; }
 .last-update { text-align: right; font-size: 0.75rem; color: #9e8e7a; margin-bottom: 1rem; }
+
+/* 查詢取消區塊 */
+.cancel-section { background: #fff; border: 1px solid #e8ddd0; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
+.cancel-section .section-title { color: #c0392b; border-left-color: #c0392b; }
+.cancel-notice { background: #fff8e1; border: 1px solid #f0c040; border-radius: 8px; padding: 0.8rem 1rem; margin-bottom: 1.2rem; font-size: 0.85rem; color: #7a6000; }
+.cancel-btn { width: 100%; padding: 0.9rem; background: #c0392b; color: white; border: none; border-radius: 8px; font-size: 1rem; font-family: 'Noto Serif TC', serif; cursor: pointer; margin-top: 0.5rem; }
+.cancel-btn:hover { background: #a93226; }
+.cancel-btn:disabled { background: #9e8e7a; cursor: not-allowed; }
+.cancel-result { background: #faf8f5; border: 1px solid #e8ddd0; border-radius: 8px; padding: 1.2rem; margin-top: 1rem; display: none; }
+.cancel-result.visible { display: block; }
+.booking-detail { font-size: 0.95rem; line-height: 2; }
+.booking-detail .label { color: #9e8e7a; }
+.booking-detail .value { color: #2c2416; font-weight: 500; }
+.confirm-cancel-btn { width: 100%; padding: 0.9rem; background: #c0392b; color: white; border: none; border-radius: 8px; font-size: 1rem; font-family: 'Noto Serif TC', serif; cursor: pointer; margin-top: 1rem; }
+.confirm-cancel-btn:hover { background: #a93226; }
+.confirm-cancel-btn:disabled { background: #9e8e7a; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -71,6 +87,7 @@ footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; b
     <div class="info-item"><strong id="infoPhone">-</strong>電話</div>
     <div class="info-item"><strong id="infoHours">-</strong>營業時間</div>
   </div>
+
   <h2 class="section-title">選擇日期</h2>
   <div class="last-update" id="lastUpdate"></div>
   <div class="calendar-nav">
@@ -113,14 +130,60 @@ footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; b
     </div>
     <button class="submit-btn" id="submitBtn" onclick="submitBooking()">送出預約申請</button>
   </div>
+
+  <!-- 查詢／取消預約區塊 -->
+  <div class="cancel-section">
+    <h2 class="section-title" style="color:#c0392b;border-left-color:#c0392b;">查詢 / 取消預約</h2>
+    <div class="cancel-notice">
+      ⚠️ 取消預約需輸入預約單號、姓名、電話及預約時段，四項資料須完全正確才可辦理。<br>
+      預約單號請見確認 Email，格式為 <strong>LYC-日期-英數</strong>。
+    </div>
+    <div class="form-group">
+      <label>預約單號 <span class="required">*</span></label>
+      <input type="text" id="cancelBookingId" placeholder="例：LYC-20260508-A3K9" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>姓名 <span class="required">*</span></label>
+      <input type="text" id="cancelName" placeholder="請輸入預約時填寫的姓名">
+    </div>
+    <div class="form-group">
+      <label>電話 <span class="required">*</span></label>
+      <input type="tel" id="cancelPhone" placeholder="請輸入預約時填寫的電話">
+    </div>
+    <div class="form-group">
+      <label>預約時段 <span class="required">*</span></label>
+      <input type="text" id="cancelTimeSlot" placeholder="例：17:00-18:30">
+    </div>
+    <button class="cancel-btn" id="cancelQueryBtn" onclick="queryBooking()">查詢預約</button>
+
+    <div class="cancel-result" id="cancelResult">
+      <div class="booking-detail" id="cancelBookingDetail"></div>
+      <button class="confirm-cancel-btn" id="confirmCancelBtn" onclick="confirmCancel()">確認取消此預約</button>
+    </div>
+    <div id="cancelMessage" class="message" style="margin-top:1rem;"></div>
+  </div>
+
 </div>
-<footer>預約送出後請留意 Email 信箱，店家確認後將寄送通知。如需取消請提前來電。</footer>
+<footer>
+  預約送出後請留意 Email 信箱，店家確認後將寄送通知。<br>
+  如需取消，請使用上方查詢取消功能，或點擊確認 Email 中的取消連結。
+  <br><br>
+  <a href="index.html" style="color:#8b6914;">← 返回首頁</a>
+</footer>
 <script>
 var SLOTS_JSON = "slots.json";
-var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzv7x0sBpPsrh5yHpWwmerlvmNTsoHmdCyNtXuFtLxjehTPIkIyTvMwoj8qbNzvHNuIFg/exec";
+var APPS_SCRIPT_URL = "";
 var slotsData = {};
 var currentYear, currentMonth;
 var selectedDate = null, selectedTime = null;
+var cancelToken = "";
+
+// 讀取 site.json 取得 APPS_SCRIPT_URL
+fetch("site.json?t=" + Date.now())
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.apps_script_url) APPS_SCRIPT_URL = data.apps_script_url;
+  }).catch(function(){});
 
 window.onload = function() {
   var now = new Date();
@@ -174,35 +237,33 @@ function renderCalendar() {
   });
   var firstDay = new Date(currentYear, currentMonth, 1).getDay();
   var daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  var today = new Date(); today.setHours(0,0,0,0);
+  var today = new Date();
+  today.setHours(0,0,0,0);
   for (var i = 0; i < firstDay; i++) {
-    var emp = document.createElement("div");
-    emp.className = "calendar-day empty";
-    grid.appendChild(emp);
+    var empty = document.createElement("div");
+    empty.className = "calendar-day empty";
+    grid.appendChild(empty);
   }
   for (var d = 1; d <= daysInMonth; d++) {
-    var el = document.createElement("div");
-    el.className = "calendar-day";
-    el.textContent = d;
-    var thisDate = new Date(currentYear, currentMonth, d);
-    thisDate.setHours(0,0,0,0);
-    var ds = formatDate(currentYear, currentMonth, d);
-    if (thisDate < today) {
-      el.classList.add("past");
+    var dayEl = document.createElement("div");
+    dayEl.className = "calendar-day";
+    dayEl.textContent = d;
+    var dateStr = currentYear + "-" + String(currentMonth+1).padStart(2,"0") + "-" + String(d).padStart(2,"0");
+    var dayDate = new Date(currentYear, currentMonth, d);
+    if (dayDate < today) {
+      dayEl.classList.add("past");
     } else {
-      if (thisDate.getTime() === today.getTime()) el.classList.add("today");
-      if (selectedDate === ds) el.classList.add("selected");
-      if (slotsData[ds] && slotsData[ds].some(function(s) { return s.available; })) {
-        el.classList.add("has-slot");
+      if (dayDate.getTime() === today.getTime()) dayEl.classList.add("today");
+      if (selectedDate === dateStr) dayEl.classList.add("selected");
+      if (slotsData[dateStr] && slotsData[dateStr].some(function(s){ return s.available; })) {
+        dayEl.classList.add("has-slot");
       }
-      (function(dateStr, elem) { elem.onclick = function() { selectDate(dateStr); }; })(ds, el);
+      (function(ds) {
+        dayEl.onclick = function() { selectDate(ds); };
+      })(dateStr);
     }
-    grid.appendChild(el);
+    grid.appendChild(dayEl);
   }
-}
-
-function formatDate(y, m, d) {
-  return y + "-" + String(m+1).padStart(2,"0") + "-" + String(d).padStart(2,"0");
 }
 
 function changeMonth(dir) {
@@ -215,45 +276,49 @@ function changeMonth(dir) {
 function selectDate(dateStr) {
   selectedDate = dateStr;
   selectedTime = null;
-  document.getElementById("formSection").classList.remove("visible");
   renderCalendar();
   showSlots(dateStr);
+  document.getElementById("formSection").classList.remove("visible");
 }
 
 function showSlots(dateStr) {
   var section = document.getElementById("slotsSection");
   var slots = slotsData[dateStr];
   if (!slots || slots.length === 0) {
-    section.innerHTML = '<div class="no-slots">此日期無開放時段</div>';
+    section.innerHTML = '<div class="no-slots">此日期暫無可預約時段</div>';
     return;
   }
-  var parts = dateStr.split("-");
-  section.innerHTML = '<div style="font-size:0.9rem;color:#9e8e7a">' + parts[0] + ' 年 ' + parseInt(parts[1]) + ' 月 ' + parseInt(parts[2]) + ' 日</div><div class="slots-grid" id="slotsGrid"></div>';
-  var grid = document.getElementById("slotsGrid");
-  slots.forEach(function(slot) {
-    var btn = document.createElement("button");
-    var isFull = !slot.available;
-    btn.className = "slot-btn" + (isFull ? " full" : "");
-    var statusText = isFull ? "已額滿" : (slot.quota > 1 ? "剩餘 " + slot.remaining + " 名" : "可預約");
-    btn.innerHTML = '<div class="slot-time">' + slot.time + '</div><div class="slot-status">' + statusText + '</div>';
-    if (!isFull) {
-      btn.onclick = function() {
-        document.querySelectorAll(".slot-btn").forEach(function(b) { b.classList.remove("selected"); });
-        btn.classList.add("selected");
-        selectedTime = slot.time;
-        showForm();
-      };
+  var html = '<div class="slots-grid">';
+  slots.forEach(function(s) {
+    if (s.available) {
+      html += '<button class="slot-btn' + (selectedTime===s.time?' selected':'') + '" onclick="selectSlot(\'' + s.time + '\')">' +
+        '<div class="slot-time">' + s.time + '</div>' +
+        '<div class="slot-status">可預約</div></button>';
+    } else {
+      html += '<button class="slot-btn full" disabled>' +
+        '<div class="slot-time">' + s.time + '</div>' +
+        '<div class="slot-status">已額滿</div></button>';
     }
-    grid.appendChild(btn);
   });
+  html += '</div>';
+  section.innerHTML = html;
 }
 
-function showForm() {
+function selectSlot(time) {
+  selectedTime = time;
+  showSlots(selectedDate);
   var form = document.getElementById("formSection");
   form.classList.add("visible");
-  var parts = selectedDate.split("-");
-  document.getElementById("selectedInfo").textContent = "預約時間：" + parts[0] + " 年 " + parseInt(parts[1]) + " 月 " + parseInt(parts[2]) + " 日　" + selectedTime;
-  form.scrollIntoView({behavior:"smooth"});
+  document.getElementById("selectedInfo").textContent = "📅 " + selectedDate + "　⏰ " + time;
+  form.scrollIntoView({ behavior: "smooth" });
+}
+
+function showMessage(text, type) {
+  var el = document.getElementById("message");
+  el.textContent = text;
+  el.className = "message " + type;
+  el.scrollIntoView({ behavior: "smooth" });
+  if (type === "error") setTimeout(function() { el.className = "message"; }, 6000);
 }
 
 function submitBooking() {
@@ -262,11 +327,12 @@ function submitBooking() {
   var email = document.getElementById("email").value.trim();
   var lineId = document.getElementById("lineId").value.trim();
   var symptom = document.getElementById("symptom").value.trim();
-  if (!name || !phone || !email) { showMessage("請填寫姓名、電話和 Email", "error"); return; }
-  if (!selectedDate || !selectedTime) { showMessage("請選擇預約日期和時段", "error"); return; }
+  if (!name || !phone || !email) { showMessage("請填寫必填欄位（姓名、電話、Email）", "error"); return; }
+  if (!selectedDate || !selectedTime) { showMessage("請先選擇日期和時段", "error"); return; }
   var btn = document.getElementById("submitBtn");
-  btn.disabled = true; btn.textContent = "送出中...";
-  var params = "action=addBooking" +
+  btn.disabled = true;
+  btn.textContent = "送出中...";
+  var params = "?action=addBooking" +
     "&name=" + encodeURIComponent(name) +
     "&phone=" + encodeURIComponent(phone) +
     "&email=" + encodeURIComponent(email) +
@@ -274,33 +340,127 @@ function submitBooking() {
     "&date=" + encodeURIComponent(selectedDate) +
     "&time=" + encodeURIComponent(selectedTime) +
     "&symptom=" + encodeURIComponent(symptom);
-  var img = new Image();
-  img.src = APPS_SCRIPT_URL + "?" + params;
-  showMessage("✅ 預約申請已送出！請留意 Email 信箱，店家確認後將寄送通知給您。", "success");
-  document.getElementById("formSection").classList.remove("visible");
-  ["name","phone","email","lineId","symptom"].forEach(function(id) { document.getElementById(id).value = ""; });
-  selectedTime = null;
-  btn.disabled = false;
-  btn.textContent = "送出預約申請";
+  fetch(APPS_SCRIPT_URL + params)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status === "ok") {
+        showMessage("✅ 預約申請已送出！預約單號：" + (data.booking_id || "") + "，請留意 Email 通知。", "success");
+        document.getElementById("formSection").classList.remove("visible");
+        ["name","phone","email","lineId","symptom"].forEach(function(id){ document.getElementById(id).value = ""; });
+        selectedDate = null; selectedTime = null;
+        renderCalendar();
+        loadSlotsJson();
+      } else {
+        showMessage("送出失敗，請稍後再試。", "error");
+        btn.disabled = false;
+        btn.textContent = "送出預約申請";
+      }
+    })
+    .catch(function() {
+      showMessage("連線失敗，請稍後再試。", "error");
+      btn.disabled = false;
+      btn.textContent = "送出預約申請";
+    });
 }
 
-function showMessage(text, type) {
-  var el = document.getElementById("message");
-  el.textContent = text; el.className = "message " + type;
-  el.scrollIntoView({behavior:"smooth"});
-  if (type === "error") setTimeout(function() { el.className = "message"; }, 6000);
+// ── 查詢取消功能 ──
+function showCancelMessage(text, type) {
+  var el = document.getElementById("cancelMessage");
+  el.textContent = text;
+  el.className = "message " + type;
+  if (type === "error") setTimeout(function(){ el.className = "message"; }, 6000);
+}
+
+function queryBooking() {
+  var bookingId = document.getElementById("cancelBookingId").value.trim().toUpperCase();
+  var name = document.getElementById("cancelName").value.trim();
+  var phone = document.getElementById("cancelPhone").value.trim();
+  var timeSlot = document.getElementById("cancelTimeSlot").value.trim();
+
+  if (!bookingId || !name || !phone || !timeSlot) {
+    showCancelMessage("請填寫所有查詢欄位", "error"); return;
+  }
+
+  var btn = document.getElementById("cancelQueryBtn");
+  btn.disabled = true;
+  btn.textContent = "查詢中...";
+  document.getElementById("cancelResult").classList.remove("visible");
+  document.getElementById("cancelMessage").className = "message";
+
+  var url = APPS_SCRIPT_URL + "?action=getBookingById&booking_id=" + encodeURIComponent(bookingId);
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.disabled = false;
+      btn.textContent = "查詢預約";
+      if (!data || data.status === "not_found") {
+        showCancelMessage("查無此預約單號，請確認後再試。", "error"); return;
+      }
+      // 驗證姓名、電話、時段
+      var nameMatch = data.name && data.name.trim() === name;
+      var phoneMatch = data.phone && data.phone.toString().trim() === phone;
+      var timeMatch = data.time && data.time.toString().trim() === timeSlot;
+      if (!nameMatch || !phoneMatch || !timeMatch) {
+        showCancelMessage("資料驗證失敗，請確認姓名、電話及時段是否正確。", "error"); return;
+      }
+      if (data.status === "已取消" || data.status === "已拒絕") {
+        showCancelMessage("此預約狀態為「" + data.status + "」，無需再次取消。", "error"); return;
+      }
+      // 顯示預約資料
+      var detail = document.getElementById("cancelBookingDetail");
+      detail.innerHTML =
+        '<div class="booking-detail">' +
+        '<div><span class="label">預約單號：</span><span class="value">' + data.booking_id + '</span></div>' +
+        '<div><span class="label">姓名：</span><span class="value">' + data.name + '</span></div>' +
+        '<div><span class="label">日期：</span><span class="value">' + data.date + '</span></div>' +
+        '<div><span class="label">時段：</span><span class="value">' + data.time + '</span></div>' +
+        '<div><span class="label">狀態：</span><span class="value">' + data.status + '</span></div>' +
+        '</div>';
+      cancelToken = data.booking_id;
+      document.getElementById("cancelResult").classList.add("visible");
+    })
+    .catch(function() {
+      btn.disabled = false;
+      btn.textContent = "查詢預約";
+      showCancelMessage("連線失敗，請稍後再試。", "error");
+    });
+}
+
+function confirmCancel() {
+  if (!cancelToken) return;
+  if (!confirm("確定要取消此預約嗎？")) return;
+  var btn = document.getElementById("confirmCancelBtn");
+  btn.disabled = true;
+  btn.textContent = "處理中...";
+
+  // 用 booking_id 取消（透過 cancel.html 的 token 機制）
+  // 這裡直接呼叫 cancelBooking action
+  var url = APPS_SCRIPT_URL + "?action=cancelBooking&booking_id=" + encodeURIComponent(cancelToken);
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status === "ok") {
+        document.getElementById("cancelResult").classList.remove("visible");
+        showCancelMessage("✅ 取消申請已送出！店家將以 Email 通知您結果，請留意信箱。", "success");
+        document.getElementById("cancelBookingId").value = "";
+        document.getElementById("cancelName").value = "";
+        document.getElementById("cancelPhone").value = "";
+        document.getElementById("cancelTimeSlot").value = "";
+        cancelToken = "";
+      } else {
+        showCancelMessage(data.message || "取消失敗，請聯繫店家。", "error");
+        btn.disabled = false;
+        btn.textContent = "確認取消此預約";
+      }
+    })
+    .catch(function() {
+      showCancelMessage("連線失敗，請稍後再試。", "error");
+      btn.disabled = false;
+      btn.textContent = "確認取消此預約";
+    });
 }
 
 setInterval(loadSlotsJson, 5 * 60 * 1000);
 </script>
-  <!-- 返回首頁按鈕 -->
-<a href="index.html" style="
-  position:fixed; top:1rem; left:1rem;
-  background:#8b6914; color:white;
-  padding:0.5rem 1.2rem; border-radius:8px;
-  text-decoration:none; font-size:0.9rem;
-  z-index:999; box-shadow:0 2px 8px rgba(0,0,0,0.2);">
-  ← 返回首頁
-</a>
 </body>
 </html>
