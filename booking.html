@@ -455,15 +455,17 @@ function confirmCancel() {
   btn.disabled = true;
   btn.textContent = "處理中...";
 
-  // 用 booking_id 取消（透過 cancel.html 的 token 機制）
-  // 這裡直接呼叫 cancelBooking action
-  var url = APPS_SCRIPT_URL + "?action=cancelBooking&booking_id=" + encodeURIComponent(cancelToken);
+  // 送出取消申請給 GS，讓 Python 判斷取消政策
+  var url = APPS_SCRIPT_URL + "?action=requestCancel&booking_id=" + encodeURIComponent(cancelToken);
   fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.status === "ok") {
         document.getElementById("cancelResult").classList.remove("visible");
-        showCancelMessage("✅ 取消申請已送出！店家將以 Email 通知您結果，請留意信箱。", "success");
+        var msg = data.need_review
+          ? "⏳ 取消申請已送出，需等待店家審核，結果將以 Email 通知您，請留意信箱。"
+          : "✅ 取消申請已成功，店家將以 Email 確認通知。";
+        showCancelMessage(msg, "success");
         document.getElementById("cancelBookingId").value = "";
         document.getElementById("cancelName").value = "";
         document.getElementById("cancelPhone").value = "";
