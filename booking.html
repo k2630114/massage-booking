@@ -56,10 +56,35 @@ textarea { resize: vertical; min-height: 80px; }
 footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; border-top: 1px solid #e8ddd0; }
 .last-update { text-align: right; font-size: 0.75rem; color: #9e8e7a; margin-bottom: 1rem; }
 /* 攜伴區塊 */
-.companion-box { background: #fffbf2; border: 1px solid #f0c040; border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 1rem; }
-.companion-note { color: #8b6914; font-size: 0.85rem; margin: 6px 0 10px; }
-.slot-count-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.9rem; }
-.slot-count-row input[type=number] { width: 70px; padding: 0.3rem 0.5rem; }
+.companion-box {
+  background: #fffbf2; border: 1px solid #f0c040;
+  border-radius: 10px; padding: 0.8rem 1rem; margin-bottom: 1rem;
+  overflow-x: hidden;  /* 防止手機版橫向溢出 */
+}
+.companion-note {
+  color: #8b6914; font-size: 0.83rem; margin: 6px 0 10px;
+  line-height: 1.5; word-break: break-word;
+}
+.slot-count-row {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 8px; font-size: 0.85rem;
+  flex-wrap: wrap;  /* 手機版自動換行 */
+  padding: 6px 4px; border-bottom: 1px solid #f0e8d8;
+}
+.slot-count-row:last-child { border-bottom: none; }
+.slot-count-row input[type=number] {
+  width: 60px; padding: 0.3rem 0.5rem;
+  border: 1px solid #e8ddd0; border-radius: 6px; font-size: 0.9rem;
+}
+.slot-count-row input[type=checkbox] {
+  width: 20px; height: 20px; flex-shrink: 0; cursor: pointer;
+  accent-color: #4a7c59;
+}
+.slot-count-row label {
+  flex: 1; min-width: 110px; cursor: pointer;
+  color: #2c2416; font-weight: 500;
+}
+.slot-count-row .unit-lbl { color: #9e8e7a; font-size: 0.78rem; flex-shrink: 0; }
 /* 查詢取消區塊 */
 .cancel-section { background: #fff; border: 1px solid #e8ddd0; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
 .cancel-notice { background: #fff8e1; border: 1px solid #f0c040; border-radius: 8px; padding: 0.8rem 1rem; margin-bottom: 1.2rem; font-size: 0.85rem; color: #7a6000; }
