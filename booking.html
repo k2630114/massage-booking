@@ -124,6 +124,30 @@ footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; b
       <label>症狀描述（選填）</label>
       <textarea id="symptom" placeholder="請描述您的不適部位或需求..."></textarea>
     </div>
+    <div class="form-group">
+      <label>是否攜伴？</label>
+      <div style="display:flex;gap:16px;margin-top:6px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="radio" name="withCompanion" value="no" checked onchange="toggleCompanion(this.value)"> 否，只有我一人
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="radio" name="withCompanion" value="yes" onchange="toggleCompanion(this.value)"> 是，有攜伴
+        </label>
+      </div>
+    </div>
+    <div id="companionSection" style="display:none">
+      <div class="form-group">
+        <label for="companionCount">共幾位（含您本人）<span style="color:red">*</span></label>
+        <input type="number" id="companionCount" min="2" max="10" value="2" oninput="checkCompanionSlot()">
+      </div>
+      <div id="companionSlotNote" style="color:#c4972a;font-size:0.85rem;margin:4px 0 8px 0"></div>
+      <div id="extraSlotGroup" style="display:none" class="form-group">
+        <label>請選擇第二個預約時段 <span style="color:red">*</span></label>
+        <div id="extraSlotList"></div>
+      </div>
+    </div>
+    <div style="display:none"><!-- placeholder to keep structure -->
+    </div>
     <div class="line-notice" id="lineNotice">
       <p>📱 加入官方 Line 可接收預約通知（建議加入）</p>
       <img id="lineQrImg" src="" alt="官方 Line QR Code" style="display:none">
@@ -362,6 +386,16 @@ function submitBooking() {
   fetchWithRetry(APPS_SCRIPT_URL + params)
     .then(function(data) {
       if (data.status === "ok") {
+        // 攜伴第二筆
+        var wb = document.querySelector('input[name="withCompanion"]:checked');
+        if (wb && wb.value==="yes" && selectedExtraTime) {
+          var p2 = "?action=addBooking&name="+encodeURIComponent(name)+"&phone="+encodeURIComponent(phone)+
+            "&email="+encodeURIComponent(email)+"&lineId="+encodeURIComponent(lineId)+
+            "&date="+encodeURIComponent(selectedDate)+"&time="+encodeURIComponent(selectedExtraTime)+
+            "&symptom="+encodeURIComponent(symptom)+" (攜伴第二時段)";
+          fetchWithRetry(APPS_SCRIPT_URL + p2).then(function(){}).catch(function(){});
+          selectedExtraTime = "";
+        }
         showMessage("✅ 預約申請已送出！請留意 Email 信箱，確認信將附上預約單號。", "success");
         document.getElementById("formSection").classList.remove("visible");
         ["name","phone","email","lineId","symptom"].forEach(function(id){ document.getElementById(id).value = ""; });
@@ -407,6 +441,52 @@ function fetchWithRetry(url, retries) {
       }
       throw err;
     });
+}
+
+// ── 攜伴功能 ──
+var selectedExtraTime = "";
+
+function toggleCompanion(val) {
+  document.getElementById("companionSection").style.display = val==="yes" ? "block" : "none";
+  if (val === "yes") checkCompanionSlot();
+}
+
+function checkCompanionSlot() {
+  if (!selectedDate || !selectedTime) return;
+  var count = parseInt(document.getElementById("companionCount").value) || 2;
+  var slots = slotsData[selectedDate] || [];
+  var cur = null;
+  for (var i=0;i<slots.length;i++) { if(slots[i].time===selectedTime){cur=slots[i];break;} }
+  var quota = cur ? (cur.quota || 1) : 1;
+  var note = document.getElementById("companionSlotNote");
+  var extra = document.getElementById("extraSlotGroup");
+  if (count <= quota) {
+    note.textContent = "✅ 此時段可容納 " + count + " 位，無需選第二個時段。";
+    extra.style.display = "none";
+  } else {
+    var remain = count - quota;
+    note.textContent = "⚠️ 此時段最多 " + quota + " 位，剩餘 " + remain + " 位需選第二個時段。";
+    extra.style.display = "block";
+    renderExtraSlots(remain);
+  }
+}
+
+function renderExtraSlots(remain) {
+  var list = document.getElementById("extraSlotList");
+  list.innerHTML = "";
+  var slots = slotsData[selectedDate] || [];
+  var avail = slots.filter(function(s){ return s.available && s.time !== selectedTime; });
+  if (!avail.length) {
+    list.innerHTML = "<p style='color:red'>目前無其他可用時段。</p>"; return;
+  }
+  avail.forEach(function(s) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "slot-btn" + (selectedExtraTime===s.time ? " selected" : "");
+    btn.innerHTML = "<div class='slot-time'>" + s.time + "</div><div class='slot-status'>可預約</div>";
+    btn.onclick = function(){ selectedExtraTime = s.time; renderExtraSlots(remain); };
+    list.appendChild(btn);
+  });
 }
 
 function queryBooking() {
