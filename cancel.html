@@ -7,174 +7,69 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family: 'Noto Sans TC', sans-serif;
-    background: #f5efe3;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-  }
-  .card {
-    background: white;
-    border-radius: 20px;
-    padding: 2.5rem;
-    max-width: 480px;
-    width: 100%;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.1);
-  }
-  .logo {
-    font-family: 'Noto Serif TC', serif;
-    color: #8b6914;
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-  }
-  .divider {
-    width: 40px; height: 3px;
-    background: #8b6914;
-    border-radius: 2px;
-    margin-bottom: 1.5rem;
-  }
-  h1 {
-    font-family: 'Noto Serif TC', serif;
-    font-size: 1.5rem;
-    color: #2c2416;
-    margin-bottom: 0.5rem;
-  }
-  .subtitle {
-    color: #888;
-    font-size: 0.9rem;
-    margin-bottom: 2rem;
-  }
-  .booking-info {
-    background: #faf8f5;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    border: 1px solid rgba(139,105,20,0.2);
-  }
-  .info-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.8rem;
-    font-size: 0.95rem;
-  }
-  .info-row:last-child { margin-bottom: 0; }
-  .info-label { color: #888; }
-  .info-value { color: #2c2416; font-weight: 500; }
-  .warning {
-    background: #fff8e1;
-    border: 1px solid #f0c040;
-    border-radius: 10px;
-    padding: 1rem;
-    font-size: 0.85rem;
-    color: #7a6000;
-    margin-bottom: 1.5rem;
-  }
-  .btn-cancel {
-    width: 100%;
-    background: #c0392b;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 0.9rem;
-    font-size: 1rem;
-    cursor: pointer;
-    font-family: 'Noto Sans TC', sans-serif;
-    transition: background 0.2s;
-  }
-  .btn-cancel:hover { background: #a93226; }
-  .btn-cancel:disabled { background: #ccc; cursor: not-allowed; }
-  .btn-back {
-    width: 100%;
-    background: transparent;
-    color: #8b6914;
-    border: 1px solid #8b6914;
-    border-radius: 10px;
-    padding: 0.9rem;
-    font-size: 1rem;
-    cursor: pointer;
-    font-family: 'Noto Sans TC', sans-serif;
-    margin-top: 0.8rem;
-    text-decoration: none;
-    display: block;
-    text-align: center;
-  }
-  .status-box {
-    text-align: center;
-    padding: 2rem 0;
-  }
-  .status-icon { font-size: 3rem; margin-bottom: 1rem; }
-  .status-title {
-    font-family: 'Noto Serif TC', serif;
-    font-size: 1.3rem;
-    color: #2c2416;
-    margin-bottom: 0.5rem;
-  }
-  .status-msg { color: #666; font-size: 0.9rem; line-height: 1.8; }
-  .loading {
-    text-align: center;
-    padding: 3rem 0;
-    color: #888;
-  }
-  .spinner {
-    width: 40px; height: 40px;
-    border: 3px solid #f0e8d0;
-    border-top-color: #8b6914;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 1rem;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  body { font-family:'Noto Sans TC',sans-serif; background:#f5efe3; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1rem; }
+  .card { background:white; border-radius:20px; padding:2.5rem; max-width:520px; width:100%; box-shadow:0 8px 40px rgba(0,0,0,0.1); }
+  .logo { font-family:'Noto Serif TC',serif; color:#8b6914; font-size:1.2rem; font-weight:600; margin-bottom:1.5rem; }
+  .divider { width:40px; height:3px; background:#8b6914; border-radius:2px; margin-bottom:1.5rem; }
+  h1 { font-family:'Noto Serif TC',serif; font-size:1.5rem; color:#2c2416; margin-bottom:0.5rem; }
+  .subtitle { color:#888; font-size:0.9rem; margin-bottom:2rem; }
+  .booking-info { background:#faf8f5; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; border:1px solid rgba(139,105,20,0.2); }
+  .info-row { display:flex; justify-content:space-between; margin-bottom:0.8rem; font-size:0.95rem; }
+  .info-row:last-child { margin-bottom:0; }
+  .info-label { color:#888; flex-shrink:0; margin-right:1rem; }
+  .info-value { color:#2c2416; font-weight:500; text-align:right; }
+  .slots-list { margin-top:0.5rem; }
+  .slot-item { background:#fff; border:1px solid #e8ddd0; border-radius:8px; padding:0.5rem 0.8rem; margin-bottom:0.4rem; font-size:0.9rem; }
+  .warning { background:#fff8e1; border:1px solid #f0c040; border-radius:10px; padding:1rem; font-size:0.85rem; color:#7a6000; margin-bottom:1.5rem; }
+  .partial-section { border-top:1px solid #e8ddd0; padding-top:1.2rem; margin-bottom:1.5rem; }
+  .partial-section h3 { font-size:1rem; color:#2c2416; margin-bottom:0.8rem; font-family:'Noto Serif TC',serif; }
+  .slot-cancel-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; font-size:0.9rem; }
+  .slot-cancel-row input[type=checkbox] { width:18px; height:18px; cursor:pointer; }
+  .slot-cancel-row label { cursor:pointer; min-width:160px; }
+  .slot-cancel-row input[type=number] { width:65px; padding:0.3rem 0.5rem; border:1px solid #e8ddd0; border-radius:6px; font-size:0.9rem; }
+  .cancel-all-row { display:flex; align-items:center; gap:8px; margin-top:10px; font-size:0.9rem; cursor:pointer; color:#c0392b; }
+  .cancel-all-row input[type=checkbox] { width:18px; height:18px; }
+  .btn-cancel { width:100%; background:#c0392b; color:white; border:none; border-radius:10px; padding:0.9rem; font-size:1rem; cursor:pointer; font-family:'Noto Sans TC',sans-serif; transition:background 0.2s; }
+  .btn-cancel:hover { background:#a93226; }
+  .btn-cancel:disabled { background:#ccc; cursor:not-allowed; }
+  .btn-back { width:100%; background:transparent; color:#8b6914; border:1px solid #8b6914; border-radius:10px; padding:0.9rem; font-size:1rem; cursor:pointer; font-family:'Noto Sans TC',sans-serif; margin-top:0.8rem; text-decoration:none; display:block; text-align:center; }
+  .status-box { text-align:center; padding:2rem 0; }
+  .status-icon { font-size:3rem; margin-bottom:1rem; }
+  .status-title { font-family:'Noto Serif TC',serif; font-size:1.3rem; color:#2c2416; margin-bottom:0.5rem; }
+  .status-msg { color:#666; font-size:0.9rem; line-height:1.8; white-space:pre-line; }
+  .loading { text-align:center; padding:3rem 0; color:#888; }
+  .spinner { width:40px; height:40px; border:3px solid #f0e8d0; border-top-color:#8b6914; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 1rem; }
+  @keyframes spin { to { transform:rotate(360deg); } }
 </style>
 </head>
 <body>
 <div class="card">
   <div class="logo" id="shopName">推拿預約系統</div>
   <div class="divider"></div>
-
-  <!-- 載入中 -->
-  <div id="loadingView" class="loading">
-    <div class="spinner"></div>
-    <p>查詢預約資料中...</p>
-  </div>
-
-  <!-- 確認取消 -->
+  <div id="loadingView" class="loading"><div class="spinner"></div><p>查詢預約資料中...</p></div>
   <div id="confirmView" style="display:none">
     <h1>取消預約確認</h1>
     <p class="subtitle">請確認以下預約資料，確認後將送出取消申請</p>
     <div class="booking-info">
-      <div class="info-row">
-        <span class="info-label">預約單號</span>
-        <span class="info-value" id="infoBookingId">-</span>
+      <div class="info-row"><span class="info-label">預約單號</span><span class="info-value" id="infoBookingId">-</span></div>
+      <div class="info-row"><span class="info-label">姓名</span><span class="info-value" id="infoName">-</span></div>
+      <div class="info-row"><span class="info-label">日期</span><span class="info-value" id="infoDate">-</span></div>
+      <div class="info-row" id="singleSlotRow"><span class="info-label">時段</span><span class="info-value" id="infoTime">-</span></div>
+      <div id="multiSlotBlock" style="display:none">
+        <div class="info-label" style="margin-bottom:0.4rem">時段明細</div>
+        <div class="slots-list" id="infoSlotsList"></div>
       </div>
-      <div class="info-row">
-        <span class="info-label">姓名</span>
-        <span class="info-value" id="infoName">-</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">日期</span>
-        <span class="info-value" id="infoDate">-</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">時段</span>
-        <span class="info-value" id="infoTime">-</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">狀態</span>
-        <span class="info-value" id="infoStatus">-</span>
-      </div>
+      <div class="info-row" style="margin-top:0.8rem"><span class="info-label">狀態</span><span class="info-value" id="infoStatus">-</span></div>
     </div>
-    <div class="warning" id="policyWarning" style="display:none">
-      ⚠️ 此預約需要店家審核取消申請，審核結果將以 Email 通知您。
+    <div class="warning" id="policyWarning" style="display:none">⚠️ 此預約需要店家審核取消申請，審核結果將以 Email 通知您。</div>
+    <div class="partial-section" id="partialSection" style="display:none">
+      <h3>選擇要取消的時段（可選部分取消）</h3>
+      <div id="partialRows"></div>
+      <label class="cancel-all-row"><input type="checkbox" id="cancelAllChk" onchange="toggleCancelAll(this.checked)"> 整單全部取消</label>
     </div>
-    <button class="btn-cancel" id="btnConfirm" onclick="confirmCancel()">確認取消此預約</button>
+    <button class="btn-cancel" id="btnConfirm" onclick="confirmCancel()">確認送出取消申請</button>
     <a href="index.html" class="btn-back">返回首頁</a>
   </div>
-
-  <!-- 結果 -->
   <div id="resultView" style="display:none">
     <div class="status-box">
       <div class="status-icon" id="resultIcon">✅</div>
@@ -184,110 +79,128 @@
     <a href="index.html" class="btn-back">返回首頁</a>
   </div>
 </div>
-
 <script>
-var APPS_SCRIPT_URL = ""; // 由 site.json 讀取
+var APPS_SCRIPT_URL = "";
 var cancelToken = "";
+var bookingId   = "";
+var slotsArr    = [];
 
-// 讀取 token
-function getToken() {
-  var params = new URLSearchParams(window.location.search);
-  return params.get("token") || "";
-}
+function getToken(){ return new URLSearchParams(window.location.search).get("token") || ""; }
 
-// 載入 site.json 取得 Apps Script URL 和店名
 fetch("site.json?t=" + Date.now())
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
+  .then(function(r){ return r.json(); })
+  .then(function(data){
     APPS_SCRIPT_URL = data.apps_script_url || "";
-    if (data.shop_name) {
-      document.getElementById("shopName").textContent = data.shop_name;
-      document.title = "取消預約 - " + data.shop_name;
-    }
-  })
-  .catch(function(){})
-  .finally(function() {
+    if (data.shop_name){ document.getElementById("shopName").textContent = data.shop_name; document.title = "取消預約 - " + data.shop_name; }
+  }).catch(function(){})
+  .finally(function(){
     cancelToken = getToken();
-    if (!cancelToken) {
-      showResult("❌","連結無效","此取消連結無效，請聯繫店家。");
-      return;
-    }
-    // 如果 APPS_SCRIPT_URL 還是空的，用預設值
-    if (!APPS_SCRIPT_URL) {
-      APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzv7x0sBpPsrh5yHpWwmerlvmNTsoHmdCyNtXuFtLxjehTPIkIyTvMwoj8qbNzvHNuIFg/exec";
-    }
+    if (!cancelToken){ showResult("❌","連結無效","此取消連結無效，請聯繫店家。"); return; }
+    if (!APPS_SCRIPT_URL) APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzv7x0sBpPsrh5yHpWwmerlvmNTsoHmdCyNtXuFtLxjehTPIkIyTvMwoj8qbNzvHNuIFg/exec";
     loadBooking();
   });
 
-function loadBooking() {
+function loadBooking(){
   fetch(APPS_SCRIPT_URL + "?action=getBookingByToken&token=" + encodeURIComponent(cancelToken))
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
+    .then(function(r){ return r.json(); })
+    .then(function(data){
       document.getElementById("loadingView").style.display = "none";
-      if (!data || data.status === "not_found") {
-        showResult("❌","連結無效","此取消連結無效或已過期，請聯繫店家。");
-        return;
-      }
-      if (data.used) {
-        showResult("⚠️","已使用","此取消連結已使用過，無法重複操作。\n如有疑問請聯繫店家。");
-        return;
-      }
-      if (data.status === "已取消" || data.status === "已拒絕") {
-        showResult("ℹ️","無法取消","此預約狀態為「" + data.status + "」，無需再次取消。");
-        return;
-      }
-      // 顯示確認頁
+      if (!data || data.status === "not_found"){ showResult("❌","連結無效","此取消連結無效或已過期，請聯繫店家。"); return; }
+      if (data.used){ showResult("⚠️","已使用","此取消連結已使用過，無法重複操作。\n如有疑問請聯繫店家。"); return; }
+      if (data.expired){ showResult("⚠️","連結已過期","此取消連結已超過有效期限，請聯繫店家。"); return; }
+      if (data.status === "已取消" || data.status === "已拒絕"){ showResult("ℹ️","無法取消","此預約狀態為「"+data.status+"」，無需再次取消。"); return; }
+      bookingId = data.booking_id || "";
+      slotsArr = [];
+      try { slotsArr = JSON.parse(data.slots || "[]"); } catch(ex){}
       document.getElementById("infoBookingId").textContent = data.booking_id || "-";
-      document.getElementById("infoName").textContent = data.name || "-";
-      document.getElementById("infoDate").textContent = data.date || "-";
-      document.getElementById("infoTime").textContent = data.time_slot || "-";
-      document.getElementById("infoStatus").textContent = data.status || "-";
-      if (data.need_review) {
-        document.getElementById("policyWarning").style.display = "block";
+      document.getElementById("infoName").textContent      = data.name || "-";
+      document.getElementById("infoDate").textContent      = data.date || "-";
+      document.getElementById("infoStatus").textContent    = data.status || "-";
+      if (slotsArr.length > 1){
+        document.getElementById("singleSlotRow").style.display = "none";
+        document.getElementById("multiSlotBlock").style.display = "block";
+        var list = document.getElementById("infoSlotsList");
+        list.innerHTML = "";
+        slotsArr.forEach(function(s){
+          var div = document.createElement("div"); div.className = "slot-item";
+          div.textContent = s.date + " " + s.time + "　" + s.count + " 人"; list.appendChild(div);
+        });
+        buildPartialRows();
+        document.getElementById("partialSection").style.display = "block";
+      } else {
+        document.getElementById("singleSlotRow").style.display = "flex";
+        var t = (slotsArr.length === 1) ? slotsArr[0].time : (data.time_slot || "");
+        document.getElementById("infoTime").textContent = t || "-";
+        document.getElementById("partialSection").style.display = "none";
       }
+      if (data.need_review) document.getElementById("policyWarning").style.display = "block";
       document.getElementById("confirmView").style.display = "block";
     })
-    .catch(function() {
-      document.getElementById("loadingView").style.display = "none";
-      showResult("❌","連線失敗","無法連線至伺服器，請稍後再試。");
-    });
+    .catch(function(){ document.getElementById("loadingView").style.display="none"; showResult("❌","連線失敗","無法連線至伺服器，請稍後再試。"); });
 }
 
-function confirmCancel() {
+function buildPartialRows(){
+  var div = document.getElementById("partialRows");
+  div.innerHTML = ""; document.getElementById("cancelAllChk").checked = false;
+  slotsArr.forEach(function(s){
+    var row = document.createElement("div"); row.className = "slot-cancel-row";
+    var chk = document.createElement("input"); chk.type="checkbox"; chk.checked=true;
+    chk.id = "pchk_"+s.time.replace(/[:\-]/g,""); chk.dataset.time = s.time;
+    var lbl = document.createElement("label"); lbl.htmlFor=chk.id; lbl.textContent=s.date+" "+s.time;
+    var cnt = document.createElement("input"); cnt.type="number"; cnt.min=1; cnt.max=s.count; cnt.value=s.count;
+    cnt.id = "pcnt_"+s.time.replace(/[:\-]/g,""); cnt.dataset.maxCount=s.count;
+    var unitLbl = document.createElement("span"); unitLbl.textContent="/ "+s.count+" 人";
+    unitLbl.style.cssText="font-size:0.8rem;color:#9e8e7a";
+    row.appendChild(chk); row.appendChild(lbl); row.appendChild(cnt); row.appendChild(unitLbl);
+    div.appendChild(row);
+  });
+}
+
+function toggleCancelAll(checked){
+  document.querySelectorAll("#partialRows input[type=checkbox]").forEach(function(c){ c.checked=checked; });
+  if (checked){ slotsArr.forEach(function(s){ var cnt=document.getElementById("pcnt_"+s.time.replace(/[:\-]/g,"")); if(cnt) cnt.value=s.count; }); }
+}
+
+function confirmCancel(){
   var btn = document.getElementById("btnConfirm");
-  btn.disabled = true;
-  btn.textContent = "處理中...";
-
-  fetch(APPS_SCRIPT_URL + "?action=cancelByToken&token=" + encodeURIComponent(cancelToken))
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      document.getElementById("confirmView").style.display = "none";
-      if (data.status === "ok") {
-        if (data.need_review) {
-          showResult("⏳","取消申請已送出",
-            "您的取消申請已收到，需等待店家審核。\n審核結果將以 Email 通知您，請留意信箱。");
-        } else {
-          showResult("✅","取消成功",
-            "您的預約已取消成功。\n如有需要請重新預約，謝謝您的惠顧。");
-        }
-      } else {
-        showResult("❌","取消失敗", data.message || "取消失敗，請聯繫店家。");
+  btn.disabled = true; btn.textContent = "處理中...";
+  var cancelSlots = [];
+  var partialSection = document.getElementById("partialSection");
+  if (partialSection.style.display !== "none" && slotsArr.length > 1){
+    document.querySelectorAll("#partialRows input[type=checkbox]").forEach(function(chk){
+      if (chk.checked){
+        var t = chk.dataset.time;
+        var cnt = document.getElementById("pcnt_"+t.replace(/[:\-]/g,""));
+        cancelSlots.push({ time:t, count:cnt?(parseInt(cnt.value)||1):1 });
       }
-    })
-    .catch(function() {
-      btn.disabled = false;
-      btn.textContent = "確認取消此預約";
-      alert("連線失敗，請稍後再試。");
+    });
+    if (!cancelSlots.length){ alert("請至少選擇一個要取消的時段"); btn.disabled=false; btn.textContent="確認送出取消申請"; return; }
+  } else {
+    slotsArr.forEach(function(s){ cancelSlots.push({ time:s.time, count:s.count }); });
+  }
+  var payload = { action:"requestCancel", token:cancelToken, booking_id:bookingId, cancelSlots:cancelSlots };
+  function handleResult(data){
+    document.getElementById("confirmView").style.display = "none";
+    if (data.status === "ok"){
+      showResult("⏳","取消申請已送出","您的取消申請已收到，需等待店家審核。\n審核結果將以 Email 通知您，請留意信箱。");
+    } else { showResult("❌","取消失敗", data.message||"取消失敗，請聯繫店家。"); }
+  }
+  fetch(APPS_SCRIPT_URL, { method:"POST", body:JSON.stringify(payload), headers:{"Content-Type":"application/json"} })
+    .then(function(r){ return r.json(); }).then(handleResult)
+    .catch(function(){
+      fetch(APPS_SCRIPT_URL+"?action=cancelByToken&token="+encodeURIComponent(cancelToken))
+        .then(function(r){ return r.json(); }).then(handleResult)
+        .catch(function(){ btn.disabled=false; btn.textContent="確認送出取消申請"; alert("連線失敗，請稍後再試。"); });
     });
 }
 
-function showResult(icon, title, msg) {
-  document.getElementById("loadingView").style.display = "none";
-  document.getElementById("confirmView").style.display = "none";
-  document.getElementById("resultIcon").textContent = icon;
-  document.getElementById("resultTitle").textContent = title;
-  document.getElementById("resultMsg").textContent = msg;
-  document.getElementById("resultView").style.display = "block";
+function showResult(icon,title,msg){
+  document.getElementById("loadingView").style.display="none";
+  document.getElementById("confirmView").style.display="none";
+  document.getElementById("resultIcon").textContent=icon;
+  document.getElementById("resultTitle").textContent=title;
+  document.getElementById("resultMsg").textContent=msg;
+  document.getElementById("resultView").style.display="block";
 }
 </script>
 </body>
