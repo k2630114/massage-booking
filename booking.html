@@ -32,7 +32,7 @@ header p { color: #c4972a; font-size: 0.9rem; }
 .slots-section { background: #fff; border: 1px solid #e8ddd0; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; min-height: 120px; }
 .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem; margin-top: 1rem; }
 .slot-btn { padding: 0.7rem; border-radius: 8px; border: 1.5px solid #e8ddd0; background: white; cursor: pointer; text-align: center; font-size: 0.9rem; font-family: 'Noto Sans TC', sans-serif; color: #2c2416; transition: all 0.15s; }
-.slot-btn:hover { border-color: #4a7c59; background: #f0f8f3; }
+.slot-btn:hover:not(:disabled) { border-color: #4a7c59; background: #f0f8f3; }
 .slot-btn.full { background: #fdf0ef; border-color: #f0c0bc; color: #c0392b; cursor: not-allowed; }
 .slot-btn.selected { background: #4a7c59; border-color: #4a7c59; color: white; }
 .slot-time { font-size: 0.9rem; font-weight: 500; }
@@ -47,9 +47,6 @@ label { display: block; font-size: 0.85rem; color: #9e8e7a; margin-bottom: 0.4re
 input, textarea { width: 100%; padding: 0.7rem 1rem; border: 1.5px solid #e8ddd0; border-radius: 8px; font-size: 0.95rem; font-family: 'Noto Sans TC', sans-serif; background: white; color: #2c2416; outline: none; }
 input:focus, textarea:focus { border-color: #8b6914; }
 textarea { resize: vertical; min-height: 80px; }
-.line-notice { background: #f0fff4; border: 1px solid #82c9a0; border-radius: 8px; padding: 1rem; margin-bottom: 1.2rem; text-align: center; }
-.line-notice p { font-size: 0.85rem; color: #2d7a4f; margin-bottom: 0.5rem; }
-.line-notice img { max-width: 120px; margin: 0 auto; display: block; }
 .submit-btn { width: 100%; padding: 0.9rem; background: #8b6914; color: white; border: none; border-radius: 8px; font-size: 1rem; font-family: 'Noto Serif TC', serif; letter-spacing: 0.1em; cursor: pointer; }
 .submit-btn:hover { background: #c4972a; }
 .submit-btn:disabled { background: #9e8e7a; cursor: not-allowed; }
@@ -58,10 +55,13 @@ textarea { resize: vertical; min-height: 80px; }
 .message.error { background: #fdf0ef; border: 1px solid #f0c0bc; color: #c0392b; display: block; }
 footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; border-top: 1px solid #e8ddd0; }
 .last-update { text-align: right; font-size: 0.75rem; color: #9e8e7a; margin-bottom: 1rem; }
-
+/* 攜伴區塊 */
+.companion-box { background: #fffbf2; border: 1px solid #f0c040; border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+.companion-note { color: #8b6914; font-size: 0.85rem; margin: 6px 0 10px; }
+.slot-count-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.9rem; }
+.slot-count-row input[type=number] { width: 70px; padding: 0.3rem 0.5rem; }
 /* 查詢取消區塊 */
 .cancel-section { background: #fff; border: 1px solid #e8ddd0; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
-.cancel-section .section-title { color: #c0392b; border-left-color: #c0392b; }
 .cancel-notice { background: #fff8e1; border: 1px solid #f0c040; border-radius: 8px; padding: 0.8rem 1rem; margin-bottom: 1.2rem; font-size: 0.85rem; color: #7a6000; }
 .cancel-btn { width: 100%; padding: 0.9rem; background: #c0392b; color: white; border: none; border-radius: 8px; font-size: 1rem; font-family: 'Noto Serif TC', serif; cursor: pointer; margin-top: 0.5rem; }
 .cancel-btn:hover { background: #a93226; }
@@ -74,6 +74,12 @@ footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; b
 .confirm-cancel-btn { width: 100%; padding: 0.9rem; background: #c0392b; color: white; border: none; border-radius: 8px; font-size: 1rem; font-family: 'Noto Serif TC', serif; cursor: pointer; margin-top: 1rem; }
 .confirm-cancel-btn:hover { background: #a93226; }
 .confirm-cancel-btn:disabled { background: #9e8e7a; cursor: not-allowed; }
+/* 部分取消時段選擇 */
+.partial-cancel-box { margin-top: 1rem; border-top: 1px solid #e8ddd0; padding-top: 1rem; }
+.partial-cancel-box h4 { font-size: 0.95rem; color: #c0392b; margin-bottom: 0.7rem; }
+.partial-slot-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 0.9rem; }
+.partial-slot-row input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
+.partial-slot-row input[type=number] { width: 70px; padding: 0.3rem 0.5rem; }
 </style>
 </head>
 <body>
@@ -87,7 +93,6 @@ footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; b
     <div class="info-item"><strong id="infoPhone">-</strong>電話</div>
     <div class="info-item"><strong id="infoHours">-</strong>營業時間</div>
   </div>
-
   <h2 class="section-title">選擇日期</h2>
   <div class="last-update" id="lastUpdate"></div>
   <div class="calendar-nav">
@@ -104,115 +109,84 @@ footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; b
   <div class="form-section" id="formSection">
     <h2 class="section-title">填寫預約資料</h2>
     <div class="form-selected-info" id="selectedInfo"></div>
-    <div class="form-group">
-      <label>姓名 <span class="required">*</span></label>
-      <input type="text" id="name" placeholder="請輸入您的姓名" autocomplete="name">
-    </div>
-    <div class="form-group">
-      <label>電話 <span class="required">*</span></label>
-      <input type="tel" id="phone" placeholder="請輸入聯絡電話" autocomplete="tel">
-    </div>
-    <div class="form-group">
-      <label>Email <span class="required">*</span></label>
-      <input type="email" id="email" placeholder="預約結果將寄送至此信箱" autocomplete="email">
-    </div>
-    <div class="form-group">
-      <label>Line ID（選填）</label>
-      <input type="text" id="lineId" placeholder="選填" autocomplete="off">
-    </div>
-    <div class="form-group">
-      <label>症狀描述（選填）</label>
-      <textarea id="symptom" placeholder="請描述您的不適部位或需求..."></textarea>
-    </div>
+    <div class="form-group"><label>姓名 <span class="required">*</span></label><input type="text" id="name" placeholder="請輸入您的姓名" autocomplete="name"></div>
+    <div class="form-group"><label>電話 <span class="required">*</span></label><input type="tel" id="phone" placeholder="請輸入聯絡電話" autocomplete="tel"></div>
+    <div class="form-group"><label>Email <span class="required">*</span></label><input type="email" id="email" placeholder="預約結果將寄送至此信箱" autocomplete="email"></div>
+    <div class="form-group"><label>Line ID（選填）</label><input type="text" id="lineId" placeholder="選填" autocomplete="off"></div>
+    <div class="form-group"><label>症狀描述（選填）</label><textarea id="symptom" placeholder="請描述您的不適部位或需求..."></textarea></div>
+    <!-- 攜伴區塊 -->
     <div class="form-group">
       <label>是否攜伴？</label>
       <div style="display:flex;gap:16px;margin-top:6px">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-          <input type="radio" name="withCompanion" value="no" checked onchange="toggleCompanion(this.value)"> 否，只有我一人
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-          <input type="radio" name="withCompanion" value="yes" onchange="toggleCompanion(this.value)"> 是，有攜伴
-        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="withCompanion" value="no" checked onchange="toggleCompanion(this.value)"> 否，只有我一人</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="withCompanion" value="yes" onchange="toggleCompanion(this.value)"> 是，有攜伴</label>
       </div>
     </div>
     <div id="companionSection" style="display:none">
-      <div class="form-group">
-        <label for="companionCount">共幾位（含您本人）<span style="color:red">*</span></label>
-        <input type="number" id="companionCount" min="2" max="10" value="2" oninput="checkCompanionSlot()">
+      <div class="companion-box">
+        <div class="form-group" style="margin-bottom:0.6rem">
+          <label for="totalCount">共幾位（含您本人）<span class="required">*</span></label>
+          <input type="number" id="totalCount" min="2" max="10" value="2" oninput="buildCompanionSlots()">
+        </div>
+        <div class="companion-note" id="companionNote"></div>
+        <div id="companionSlotRows"></div>
       </div>
-      <div id="companionSlotNote" style="color:#c4972a;font-size:0.85rem;margin:4px 0 8px 0"></div>
-      <div id="extraSlotGroup" style="display:none" class="form-group">
-        <label>請選擇第二個預約時段 <span style="color:red">*</span></label>
-        <div id="extraSlotList"></div>
-      </div>
-    </div>
-    <div style="display:none"><!-- placeholder to keep structure -->
-    </div>
-    <div class="line-notice" id="lineNotice">
-      <p>📱 加入官方 Line 可接收預約通知（建議加入）</p>
-      <img id="lineQrImg" src="" alt="官方 Line QR Code" style="display:none">
     </div>
     <button class="submit-btn" id="submitBtn" onclick="submitBooking()">送出預約申請</button>
   </div>
-
-  <!-- 查詢／取消預約區塊 -->
+  <!-- 查詢／取消預約 -->
   <div class="cancel-section">
     <h2 class="section-title" style="color:#c0392b;border-left-color:#c0392b;">查詢 / 取消預約</h2>
     <div class="cancel-notice">
       ⚠️ 取消預約需輸入預約單號、姓名、電話及預約時段，四項資料須完全正確才可辦理。<br>
-      預約單號請見確認 Email，格式為 <strong>LYC-日期-英數</strong>（例：LYC-20260508-A3K9）。<br>
-      電話請輸入預約時填寫的號碼（含開頭0）。
+      預約單號請見確認 Email，格式為 <strong>LYC-日期-英數</strong>（例：LYC-20260508-A3K9）。
     </div>
+    <div class="form-group"><label>預約單號 <span class="required">*</span></label><input type="text" id="cancelBookingId" placeholder="例：LYC-20260508-A3K9" autocomplete="off"></div>
+    <div class="form-group"><label>姓名 <span class="required">*</span></label><input type="text" id="cancelName" placeholder="請輸入預約時填寫的姓名"></div>
+    <div class="form-group"><label>電話 <span class="required">*</span></label><input type="tel" id="cancelPhone" placeholder="請輸入預約時填寫的電話"></div>
     <div class="form-group">
-      <label>預約單號 <span class="required">*</span></label>
-      <input type="text" id="cancelBookingId" placeholder="例：LYC-20260508-A3K9" autocomplete="off">
-    </div>
-    <div class="form-group">
-      <label>姓名 <span class="required">*</span></label>
-      <input type="text" id="cancelName" placeholder="請輸入預約時填寫的姓名">
-    </div>
-    <div class="form-group">
-      <label>電話 <span class="required">*</span></label>
-      <input type="tel" id="cancelPhone" placeholder="請輸入預約時填寫的電話">
-    </div>
-    <div class="form-group">
-      <label>預約時段 <span class="required">*</span></label>
+      <label>預約時段 <span class="required">*</span> <span style="font-size:0.8rem;color:#9e8e7a">（填第一個時段，例：17:00-18:30）</span></label>
       <input type="text" id="cancelTimeSlot" placeholder="例：17:00-18:30">
     </div>
     <button class="cancel-btn" id="cancelQueryBtn" onclick="queryBooking()">查詢預約</button>
-
     <div class="cancel-result" id="cancelResult">
       <div class="booking-detail" id="cancelBookingDetail"></div>
-      <button class="confirm-cancel-btn" id="confirmCancelBtn" onclick="confirmCancel()">確認取消此預約</button>
+      <div class="partial-cancel-box" id="partialCancelBox" style="display:none">
+        <h4>選擇要取消的時段（可選部分取消）</h4>
+        <div id="partialSlotRows"></div>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;font-size:0.9rem">
+          <input type="checkbox" id="cancelAllCheck" onchange="toggleCancelAll(this.checked)"> 整單全部取消
+        </label>
+      </div>
+      <button class="confirm-cancel-btn" id="confirmCancelBtn" onclick="confirmCancel()">確認送出取消申請</button>
     </div>
     <div id="cancelMessage" class="message" style="margin-top:1rem;"></div>
   </div>
-
 </div>
 <footer>
   預約送出後請留意 Email 信箱，店家確認後將寄送通知。<br>
   如需取消，請使用上方查詢取消功能，或點擊確認 Email 中的取消連結。
-  <br><br>
-  <a href="index.html" style="color:#8b6914;">← 返回首頁</a>
+  <br><br><a href="index.html" style="color:#8b6914;">← 返回首頁</a>
 </footer>
 <script>
 var SLOTS_JSON = "slots.json";
-var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzv7x0sBpPsrh5yHpWwmerlvmNTsoHmdCyNtXuFtLxjehTPIkIyTvMwoj8qbNzvHNuIFg/exec";
+var APPS_SCRIPT_URL = "";
 var slotsData = {};
 var currentYear, currentMonth;
 var selectedDate = null, selectedTime = null;
-var cancelToken = "";
+var foundCancelToken = "";
+var foundBookingId   = "";
+var foundSlotsArr    = [];
+var companionSlotSelections = {};
 
-// 讀取 site.json 取得 APPS_SCRIPT_URL
 fetch("site.json?t=" + Date.now())
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.apps_script_url) APPS_SCRIPT_URL = data.apps_script_url;
-  }).catch(function(){});
+  .then(function(r){ return r.json(); })
+  .then(function(data){ if (data.apps_script_url) APPS_SCRIPT_URL = data.apps_script_url; })
+  .catch(function(){});
 
 window.onload = function() {
   var now = new Date();
-  currentYear = now.getFullYear();
+  currentYear  = now.getFullYear();
   currentMonth = now.getMonth();
   renderCalendar();
   loadSlotsJson();
@@ -220,33 +194,22 @@ window.onload = function() {
 
 function loadSlotsJson() {
   fetch(SLOTS_JSON + "?t=" + Date.now())
-    .then(function(r) {
-      if (!r.ok) throw new Error("not found");
-      return r.json();
-    })
-    .then(function(data) {
+    .then(function(r){ if (!r.ok) throw new Error(); return r.json(); })
+    .then(function(data){
       slotsData = data.slots || {};
-      var shop = data.shop || {};
-      if (shop.shop_name) document.getElementById("shopName").textContent = shop.shop_name;
+      var shop  = data.shop  || {};
+      if (shop.shop_name)    document.getElementById("shopName").textContent   = shop.shop_name;
       if (shop.shop_address) document.getElementById("infoAddress").textContent = shop.shop_address;
-      if (shop.shop_phone) document.getElementById("infoPhone").textContent = shop.shop_phone;
-      if (shop.shop_hours) {
+      if (shop.shop_phone)   document.getElementById("infoPhone").textContent   = shop.shop_phone;
+      if (shop.shop_hours){
         document.getElementById("infoHours").textContent = shop.shop_hours;
         document.getElementById("shopHours").textContent = shop.shop_hours;
-      }
-      if (shop.line_qr) {
-        var img = document.getElementById("lineQrImg");
-        img.src = shop.line_qr;
-        img.style.display = "block";
       }
       document.getElementById("lastUpdate").textContent = "資料更新時間：" + new Date().toLocaleTimeString("zh-TW");
       renderCalendar();
       if (selectedDate) showSlots(selectedDate);
     })
-    .catch(function() {
-      slotsData = {};
-      renderCalendar();
-    });
+    .catch(function(){ slotsData = {}; renderCalendar(); });
 }
 
 function renderCalendar() {
@@ -254,91 +217,75 @@ function renderCalendar() {
   document.getElementById("calendarTitle").textContent = currentYear + " 年 " + months[currentMonth];
   var grid = document.getElementById("calendarGrid");
   grid.innerHTML = "";
-  ["日","一","二","三","四","五","六"].forEach(function(d) {
+  ["日","一","二","三","四","五","六"].forEach(function(d){
     var el = document.createElement("div");
-    el.className = "calendar-header";
-    el.textContent = d;
-    grid.appendChild(el);
+    el.className = "calendar-header"; el.textContent = d; grid.appendChild(el);
   });
-  var firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  var firstDay    = new Date(currentYear, currentMonth, 1).getDay();
   var daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  var today = new Date();
-  today.setHours(0,0,0,0);
-  for (var i = 0; i < firstDay; i++) {
+  var today = new Date(); today.setHours(0,0,0,0);
+  for (var i = 0; i < firstDay; i++){
     var empty = document.createElement("div");
-    empty.className = "calendar-day empty";
-    grid.appendChild(empty);
+    empty.className = "calendar-day empty"; grid.appendChild(empty);
   }
-  for (var d = 1; d <= daysInMonth; d++) {
-    var dayEl = document.createElement("div");
+  for (var d = 1; d <= daysInMonth; d++){
+    var dayEl  = document.createElement("div");
     dayEl.className = "calendar-day";
     dayEl.textContent = d;
     var dateStr = currentYear + "-" + String(currentMonth+1).padStart(2,"0") + "-" + String(d).padStart(2,"0");
     var dayDate = new Date(currentYear, currentMonth, d);
-    if (dayDate < today) {
+    if (dayDate < today){
       dayEl.classList.add("past");
     } else {
       if (dayDate.getTime() === today.getTime()) dayEl.classList.add("today");
       if (selectedDate === dateStr) dayEl.classList.add("selected");
-      if (slotsData[dateStr] && slotsData[dateStr].some(function(s){ return s.available; })) {
+      if (slotsData[dateStr] && slotsData[dateStr].some(function(s){ return s.available; }))
         dayEl.classList.add("has-slot");
-      }
-      (function(ds) {
-        dayEl.onclick = function() { selectDate(ds); };
-      })(dateStr);
+      (function(ds){ dayEl.onclick = function(){ selectDate(ds); }; })(dateStr);
     }
     grid.appendChild(dayEl);
   }
 }
 
-function changeMonth(dir) {
+function changeMonth(dir){
   currentMonth += dir;
-  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  if (currentMonth > 11){ currentMonth = 0; currentYear++; }
   if (currentMonth < 0) { currentMonth = 11; currentYear--; }
   renderCalendar();
 }
 
-function selectDate(dateStr) {
-  selectedDate = dateStr;
-  selectedTime = null;
-  renderCalendar();
-  showSlots(dateStr);
+function selectDate(dateStr){
+  selectedDate = dateStr; selectedTime = null;
+  renderCalendar(); showSlots(dateStr);
   document.getElementById("formSection").classList.remove("visible");
 }
 
-function showSlots(dateStr) {
+function showSlots(dateStr){
   var section = document.getElementById("slotsSection");
-  var slots = slotsData[dateStr];
-  if (!slots || slots.length === 0) {
-    section.innerHTML = '<div class="no-slots">此日期暫無可預約時段</div>';
-    return;
+  var slots   = slotsData[dateStr];
+  if (!slots || !slots.length){
+    section.innerHTML = '<div class="no-slots">此日期暫無可預約時段</div>'; return;
   }
-  // 過濾已過去的時段
   var now = new Date();
-  var todayStr = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0") + "-" + String(now.getDate()).padStart(2,"0");
-  if (dateStr === todayStr) {
-    slots = slots.filter(function(s) {
-      var endTime = s.time.split("-")[1];
-      if (!endTime) return true;
-      var parts = endTime.split(":");
-      var slotEnd = new Date();
-      slotEnd.setHours(parseInt(parts[0]), parseInt(parts[1]), 0, 0);
-      return slotEnd > now;
+  var todayStr = now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+  if (dateStr === todayStr){
+    slots = slots.filter(function(s){
+      var end = s.time.split("-")[1]; if (!end) return true;
+      var p = end.split(":"); var se = new Date(); se.setHours(+p[0],+p[1],0,0); return se > now;
     });
-    if (slots.length === 0) {
-      section.innerHTML = '<div class="no-slots">今日時段已全部結束</div>';
-      return;
-    }
+    if (!slots.length){ section.innerHTML = '<div class="no-slots">今日時段已全部結束</div>'; return; }
   }
   var html = '<div class="slots-grid">';
-  slots.forEach(function(s) {
-    if (s.available) {
-      html += '<button class="slot-btn' + (selectedTime===s.time?' selected':'') + '" onclick="selectSlot(\'' + s.time + '\')">' +
-        '<div class="slot-time">' + s.time + '</div>' +
-        '<div class="slot-status">' + (s.remaining !== undefined && s.quota > 1 ? '可預約（剩 ' + s.remaining + '/' + s.quota + ' 位）' : '可預約') + '</div></button>';
+  slots.forEach(function(s){
+    if (s.available){
+      var sel = selectedTime === s.time ? " selected" : "";
+      var rem = (s.remaining !== undefined && s.quota > 1) ? "可預約（剩 "+s.remaining+"/"+s.quota+" 位）" : "可預約";
+      html += '<button class="slot-btn'+sel+'" onclick="selectSlot(\''+s.time+'\')">'+
+        '<div class="slot-time">'+s.time+'</div>'+
+        '<div class="slot-status">'+rem+'</div></button>';
     } else {
-      html += '<button class="slot-btn full" disabled>' +
-        '<div class="slot-time">' + s.time + '</div>' +
+      html += '<button class="slot-btn full" disabled>'+
+        '<div class="slot-time">'+s.time+'</div>'+
         '<div class="slot-status">已額滿</div></button>';
     }
   });
@@ -346,242 +293,296 @@ function showSlots(dateStr) {
   section.innerHTML = html;
 }
 
-function selectSlot(time) {
+function selectSlot(time){
   selectedTime = time;
   showSlots(selectedDate);
   var form = document.getElementById("formSection");
   form.classList.add("visible");
-  document.getElementById("selectedInfo").textContent = "📅 " + selectedDate + "　⏰ " + time;
-  form.scrollIntoView({ behavior: "smooth" });
+  updateSelectedInfo();
+  companionSlotSelections = {};
+  buildCompanionSlots();
+  form.scrollIntoView({ behavior:"smooth" });
 }
 
-function showMessage(text, type) {
-  var el = document.getElementById("message");
-  el.textContent = text;
-  el.className = "message " + type;
-  el.scrollIntoView({ behavior: "smooth" });
-  if (type === "error") setTimeout(function() { el.className = "message"; }, 6000);
+function updateSelectedInfo(){
+  var info = "📅 " + selectedDate + "　⏰ " + selectedTime;
+  if (document.querySelector('input[name="withCompanion"]:checked').value === "yes"){
+    var extras = Object.keys(companionSlotSelections).filter(function(k){ return k !== selectedTime; });
+    if (extras.length) info += "　+ " + extras.join("、");
+  }
+  document.getElementById("selectedInfo").textContent = info;
 }
 
-function submitBooking() {
-  var name = document.getElementById("name").value.trim();
-  var phone = document.getElementById("phone").value.trim().replace(/\s/g,"");
+function toggleCompanion(val){
+  document.getElementById("companionSection").style.display = val === "yes" ? "block" : "none";
+  if (val === "yes") buildCompanionSlots();
+}
+
+function buildCompanionSlots(){
+  if (!selectedDate || !selectedTime) return;
+  var totalCount = parseInt(document.getElementById("totalCount").value) || 2;
+  var slots = slotsData[selectedDate] || [];
+  var curSlot = null;
+  for (var i = 0; i < slots.length; i++){
+    if (slots[i].time === selectedTime){ curSlot = slots[i]; break; }
+  }
+  var quota = curSlot ? (curSlot.quota || 1) : 1;
+  var needSlots = Math.ceil(totalCount / quota);
+  var note = document.getElementById("companionNote");
+  var rowsDiv = document.getElementById("companionSlotRows");
+  var avail = slots.filter(function(s){ return s.available; });
+  if (needSlots === 1){
+    note.textContent = "✅ 此時段可容納 " + quota + " 位，本時段即可。";
+    rowsDiv.innerHTML = "";
+    companionSlotSelections = {};
+    companionSlotSelections[selectedTime] = totalCount;
+    updateSelectedInfo(); return;
+  }
+  note.textContent = "⚠️ 總計 " + totalCount + " 人，每時段上限 " + quota + " 位，需選擇 " + needSlots + " 個時段，各時段人數合計必須等於 " + totalCount + " 人。";
+  rowsDiv.innerHTML = "";
+  if (!companionSlotSelections[selectedTime]) companionSlotSelections[selectedTime] = quota;
+  avail.forEach(function(s){
+    var isMain = s.time === selectedTime;
+    var row = document.createElement("div");
+    row.className = "slot-count-row";
+    var chk = document.createElement("input");
+    chk.type = "checkbox";
+    chk.checked = isMain || (companionSlotSelections[s.time] !== undefined);
+    chk.disabled = isMain;
+    var lbl = document.createElement("label");
+    lbl.textContent = s.time + (isMain ? "（已選）" : "");
+    lbl.style.cssText = "font-size:0.9rem;min-width:120px;cursor:pointer";
+    var cnt = document.createElement("input");
+    cnt.type = "number"; cnt.min = 1; cnt.max = s.quota || quota;
+    cnt.value = companionSlotSelections[s.time] || (isMain ? quota : 1);
+    cnt.style.width = "70px";
+    cnt.disabled = !chk.checked;
+    var unitLbl = document.createElement("span");
+    unitLbl.textContent = "人　(上限 " + (s.quota || quota) + " 人)";
+    unitLbl.style.cssText = "font-size:0.8rem;color:#9e8e7a";
+    chk.onchange = (function(_s, _cnt){
+      return function(){
+        if (this.checked){ companionSlotSelections[_s.time] = parseInt(_cnt.value)||1; _cnt.disabled=false; }
+        else { delete companionSlotSelections[_s.time]; _cnt.disabled=true; }
+        validateCompanionTotal(totalCount);
+      };
+    })(s, cnt);
+    cnt.oninput = (function(_s){ return function(){ companionSlotSelections[_s.time]=parseInt(this.value)||1; validateCompanionTotal(totalCount); }; })(s);
+    row.appendChild(chk); row.appendChild(lbl); row.appendChild(cnt); row.appendChild(unitLbl);
+    rowsDiv.appendChild(row);
+  });
+  validateCompanionTotal(totalCount);
+  updateSelectedInfo();
+}
+
+function validateCompanionTotal(totalCount){
+  var sum = 0;
+  Object.values(companionSlotSelections).forEach(function(v){ sum += parseInt(v)||0; });
+  var note = document.getElementById("companionNote");
+  if (sum !== totalCount){
+    note.textContent = "⚠️ 各時段合計 " + sum + " 人，必須等於 " + totalCount + " 人！";
+    note.style.color = "#c0392b";
+  } else {
+    note.textContent = "✅ 合計 " + sum + " 人，符合！";
+    note.style.color = "#2d7a4f";
+  }
+}
+
+// ── 送出預約（優先 POST，fallback GET）──
+function submitBooking(){
+  var name    = document.getElementById("name").value.trim();
+  var phone   = document.getElementById("phone").value.trim().replace(/\s/g,"");
   if (phone && !phone.startsWith("0")) phone = "0" + phone;
-  var email = document.getElementById("email").value.trim();
-  var lineId = document.getElementById("lineId").value.trim();
+  var email   = document.getElementById("email").value.trim();
+  var lineId  = document.getElementById("lineId").value.trim();
   var symptom = document.getElementById("symptom").value.trim();
-  if (!name || !phone || !email) { showMessage("請填寫必填欄位（姓名、電話、Email）", "error"); return; }
-  if (!selectedDate || !selectedTime) { showMessage("請先選擇日期和時段", "error"); return; }
+  if (!name || !phone || !email){ showMessage("請填寫必填欄位（姓名、電話、Email）","error"); return; }
+  if (!selectedDate || !selectedTime){ showMessage("請先選擇日期和時段","error"); return; }
+  var withComp   = document.querySelector('input[name="withCompanion"]:checked').value;
+  var slotsArr   = [];
+  var totalCount = 1;
+  if (withComp === "yes"){
+    totalCount = parseInt(document.getElementById("totalCount").value) || 2;
+    var sum = 0;
+    Object.values(companionSlotSelections).forEach(function(v){ sum += parseInt(v)||0; });
+    if (sum !== totalCount){ showMessage("各時段人數合計（"+sum+"）不等於總人數（"+totalCount+"），請修正","error"); return; }
+    var times = Object.keys(companionSlotSelections).sort();
+    times.forEach(function(t){ slotsArr.push({ date: selectedDate, time: t, count: parseInt(companionSlotSelections[t])||1 }); });
+  } else {
+    totalCount = 1;
+    slotsArr = [{ date: selectedDate, time: selectedTime, count: 1 }];
+  }
   var btn = document.getElementById("submitBtn");
-  btn.disabled = true;
-  btn.textContent = "送出中...";
-  var params = "?action=addBooking" +
-    "&name=" + encodeURIComponent(name) +
-    "&phone=" + encodeURIComponent(phone) +
-    "&email=" + encodeURIComponent(email) +
-    "&lineId=" + encodeURIComponent(lineId) +
-    "&date=" + encodeURIComponent(selectedDate) +
-    "&time=" + encodeURIComponent(selectedTime) +
-    "&symptom=" + encodeURIComponent(symptom);
-  fetchWithRetry(APPS_SCRIPT_URL + params)
-    .then(function(data) {
-      if (data.status === "ok") {
-        // 攜伴第二筆
-        var wb = document.querySelector('input[name="withCompanion"]:checked');
-        if (wb && wb.value==="yes" && selectedExtraTime) {
-          var p2 = "?action=addBooking&name="+encodeURIComponent(name)+"&phone="+encodeURIComponent(phone)+
-            "&email="+encodeURIComponent(email)+"&lineId="+encodeURIComponent(lineId)+
-            "&date="+encodeURIComponent(selectedDate)+"&time="+encodeURIComponent(selectedExtraTime)+
-            "&symptom="+encodeURIComponent(symptom)+" (攜伴第二時段)";
-          fetchWithRetry(APPS_SCRIPT_URL + p2).then(function(){}).catch(function(){});
-          selectedExtraTime = "";
-        }
-        showMessage("✅ 預約申請已送出！請留意 Email 信箱，確認信將附上預約單號。", "success");
-        document.getElementById("formSection").classList.remove("visible");
-        ["name","phone","email","lineId","symptom"].forEach(function(id){ document.getElementById(id).value = ""; });
-        selectedDate = null; selectedTime = null;
-        renderCalendar();
-        loadSlotsJson();
-      } else {
-        showMessage("送出失敗，請稍後再試。", "error");
-        btn.disabled = false;
-        btn.textContent = "送出預約申請";
-      }
-    })
-    .catch(function() {
-      showMessage("連線失敗，請稍後再試。", "error");
-      btn.disabled = false;
-      btn.textContent = "送出預約申請";
+  btn.disabled = true; btn.textContent = "送出中...";
+  var payload = { action:"addBooking", name:name, phone:phone, email:email, lineId:lineId,
+    date:selectedDate, time:selectedTime, symptom:symptom,
+    slots:JSON.stringify(slotsArr), totalCount:totalCount };
+  function handleOk(data){
+    if (data.status === "ok"){
+      showMessage("✅ 預約申請已送出！請留意 Email 信箱，確認信將附上預約單號。","success");
+      document.getElementById("formSection").classList.remove("visible");
+      ["name","phone","email","lineId","symptom"].forEach(function(id){ document.getElementById(id).value=""; });
+      document.querySelector('input[name="withCompanion"][value="no"]').checked = true;
+      document.getElementById("companionSection").style.display = "none";
+      companionSlotSelections = {}; selectedDate = null; selectedTime = null;
+      renderCalendar(); loadSlotsJson();
+    } else {
+      showMessage("送出失敗，請稍後再試。","error");
+      btn.disabled = false; btn.textContent = "送出預約申請";
+    }
+  }
+  fetch(APPS_SCRIPT_URL, { method:"POST", body:JSON.stringify(payload), headers:{"Content-Type":"application/json"} })
+    .then(function(r){ return r.json(); }).then(handleOk)
+    .catch(function(){
+      var params = "?action=addBooking&name="+encodeURIComponent(name)+"&phone="+encodeURIComponent(phone)+
+        "&email="+encodeURIComponent(email)+"&lineId="+encodeURIComponent(lineId)+
+        "&date="+encodeURIComponent(selectedDate)+"&time="+encodeURIComponent(selectedTime)+
+        "&symptom="+encodeURIComponent(symptom)+"&slots="+encodeURIComponent(JSON.stringify(slotsArr))+
+        "&totalCount="+totalCount;
+      fetch(APPS_SCRIPT_URL + params).then(function(r){ return r.json(); }).then(handleOk)
+        .catch(function(){ showMessage("連線失敗，請稍後再試。","error"); btn.disabled=false; btn.textContent="送出預約申請"; });
     });
 }
 
-// ── 查詢取消功能 ──
-function showCancelMessage(text, type) {
-  var el = document.getElementById("cancelMessage");
-  el.textContent = text;
-  el.className = "message " + type;
+function showMessage(text, type){
+  var el = document.getElementById("message");
+  el.textContent = text; el.className = "message " + type;
+  el.scrollIntoView({ behavior:"smooth" });
   if (type === "error") setTimeout(function(){ el.className = "message"; }, 6000);
 }
 
-// fetch 失敗自動重試
-function fetchWithRetry(url, retries) {
-  retries = retries || 2;
-  return fetch(url)
-    .then(function(r) {
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      return r.json();
-    })
-    .catch(function(err) {
-      if (retries > 0) {
-        return new Promise(function(resolve) {
-          setTimeout(function() {
-            resolve(fetchWithRetry(url, retries - 1));
-          }, 2000);
-        });
-      }
-      throw err;
-    });
+// ── 查詢取消 ──
+function showCancelMessage(text, type){
+  var el = document.getElementById("cancelMessage");
+  el.textContent = text; el.className = "message " + type;
+  if (type === "error") setTimeout(function(){ el.className = "message"; }, 6000);
 }
 
-// ── 攜伴功能 ──
-var selectedExtraTime = "";
-
-function toggleCompanion(val) {
-  document.getElementById("companionSection").style.display = val==="yes" ? "block" : "none";
-  if (val === "yes") checkCompanionSlot();
-}
-
-function checkCompanionSlot() {
-  if (!selectedDate || !selectedTime) return;
-  var count = parseInt(document.getElementById("companionCount").value) || 2;
-  var slots = slotsData[selectedDate] || [];
-  var cur = null;
-  for (var i=0;i<slots.length;i++) { if(slots[i].time===selectedTime){cur=slots[i];break;} }
-  var quota = cur ? (cur.quota || 1) : 1;
-  var note = document.getElementById("companionSlotNote");
-  var extra = document.getElementById("extraSlotGroup");
-  if (count <= quota) {
-    note.textContent = "✅ 此時段可容納 " + count + " 位，無需選第二個時段。";
-    extra.style.display = "none";
-  } else {
-    var remain = count - quota;
-    note.textContent = "⚠️ 此時段最多 " + quota + " 位，剩餘 " + remain + " 位需選第二個時段。";
-    extra.style.display = "block";
-    renderExtraSlots(remain);
-  }
-}
-
-function renderExtraSlots(remain) {
-  var list = document.getElementById("extraSlotList");
-  list.innerHTML = "";
-  var slots = slotsData[selectedDate] || [];
-  var avail = slots.filter(function(s){ return s.available && s.time !== selectedTime; });
-  if (!avail.length) {
-    list.innerHTML = "<p style='color:red'>目前無其他可用時段。</p>"; return;
-  }
-  avail.forEach(function(s) {
-    var btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "slot-btn" + (selectedExtraTime===s.time ? " selected" : "");
-    btn.innerHTML = "<div class='slot-time'>" + s.time + "</div><div class='slot-status'>可預約</div>";
-    btn.onclick = function(){ selectedExtraTime = s.time; renderExtraSlots(remain); };
-    list.appendChild(btn);
-  });
-}
-
-function queryBooking() {
+function queryBooking(){
   var bookingId = document.getElementById("cancelBookingId").value.trim().toUpperCase();
-  var name = document.getElementById("cancelName").value.trim();
-  var phone = document.getElementById("cancelPhone").value.trim();
-  var timeSlot = document.getElementById("cancelTimeSlot").value.trim();
-
-  if (!bookingId || !name || !phone || !timeSlot) {
-    showCancelMessage("請填寫所有查詢欄位", "error"); return;
-  }
-
+  var name      = document.getElementById("cancelName").value.trim();
+  var phone     = document.getElementById("cancelPhone").value.trim();
+  var timeSlot  = document.getElementById("cancelTimeSlot").value.trim();
+  if (!bookingId || !name || !phone || !timeSlot){ showCancelMessage("請填寫所有查詢欄位","error"); return; }
   var btn = document.getElementById("cancelQueryBtn");
-  btn.disabled = true;
-  btn.textContent = "查詢中...";
+  btn.disabled = true; btn.textContent = "查詢中...";
   document.getElementById("cancelResult").classList.remove("visible");
-  document.getElementById("cancelMessage").className = "message";
-
-  var url = APPS_SCRIPT_URL + "?action=getBookingById&booking_id=" + encodeURIComponent(bookingId);
-  fetchWithRetry(url)
-    .then(function(data) {
-      btn.disabled = false;
-      btn.textContent = "查詢預約";
-      if (!data || data.status === "not_found") {
-        showCancelMessage("查無此預約單號，請確認後再試。", "error"); return;
-      }
-      // 驗證姓名、電話、時段
-      var nameMatch = data.name && data.name.trim() === name;
-      // 電話比對：去掉前導0和空白
-      var normPhone = phone.replace(/[-\s]/g,'');
-      var dataPhone = (data.phone||'').toString().replace(/[-\s]/g,'');
+  fetch(APPS_SCRIPT_URL + "?action=getBookingById&booking_id=" + encodeURIComponent(bookingId))
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      btn.disabled = false; btn.textContent = "查詢預約";
+      if (!data || data.status === "not_found"){ showCancelMessage("查無此預約單號，請確認後再試。","error"); return; }
+      // 四項驗證
+      var nameMatch  = data.name && data.name.trim() === name;
+      var normPhone  = phone.replace(/[-\s]/g,"");
+      var dataPhone  = (data.phone||"").toString().replace(/[-\s]/g,"");
       var phoneMatch = dataPhone === normPhone;
-      var timeMatch = data.time && data.time.toString().trim() === timeSlot;
-      if (!nameMatch || !phoneMatch || !timeMatch) {
-        showCancelMessage("資料驗證失敗，請確認姓名、電話及時段是否正確。", "error"); return;
-      }
-      if (data.status === "已取消" || data.status === "已拒絕") {
-        showCancelMessage("此預約狀態為「" + data.status + "」，無需再次取消。", "error"); return;
-      }
+      var timeMatch  = false;
+      try {
+        var sArr = JSON.parse(data.slots || "[]");
+        for (var i = 0; i < sArr.length; i++){ if (sArr[i].time && sArr[i].time.trim() === timeSlot){ timeMatch=true; break; } }
+      } catch(ex){}
+      if (!timeMatch && data.time && data.time.trim() === timeSlot) timeMatch = true;
+      if (!nameMatch || !phoneMatch || !timeMatch){ showCancelMessage("資料驗證失敗，請確認姓名、電話及時段是否正確。","error"); return; }
+      if (data.status === "已取消" || data.status === "已拒絕"){ showCancelMessage("此預約狀態為「"+data.status+"」，無需再次取消。","error"); return; }
+      foundCancelToken = data.cancel_token || "";
+      foundBookingId   = data.booking_id  || bookingId;
+      foundSlotsArr = [];
+      try { foundSlotsArr = JSON.parse(data.slots || "[]"); } catch(ex){}
       // 顯示預約資料
-      var detail = document.getElementById("cancelBookingDetail");
-      detail.innerHTML =
-        '<div class="booking-detail">' +
-        '<div><span class="label">預約單號：</span><span class="value">' + data.booking_id + '</span></div>' +
-        '<div><span class="label">姓名：</span><span class="value">' + data.name + '</span></div>' +
-        '<div><span class="label">日期：</span><span class="value">' + data.date + '</span></div>' +
-        '<div><span class="label">時段：</span><span class="value">' + data.time + '</span></div>' +
-        '<div><span class="label">狀態：</span><span class="value">' + data.status + '</span></div>' +
-        '</div>';
-      cancelToken = data.booking_id;
+      var slotsHtml = "";
+      if (foundSlotsArr.length > 1){
+        slotsHtml = "<div><span class='label'>時段明細：</span><br>";
+        foundSlotsArr.forEach(function(s){ slotsHtml += "&nbsp;&nbsp;" + s.date + " " + s.time + "（" + s.count + "人）<br>"; });
+        slotsHtml += "</div>";
+      } else {
+        slotsHtml = "<div><span class='label'>時段：</span><span class='value'>" + timeSlot + "</span></div>";
+      }
+      document.getElementById("cancelBookingDetail").innerHTML =
+        "<div class='booking-detail'>" +
+        "<div><span class='label'>預約單號：</span><span class='value'>" + foundBookingId + "</span></div>" +
+        "<div><span class='label'>姓名：</span><span class='value'>" + data.name + "</span></div>" +
+        "<div><span class='label'>日期：</span><span class='value'>" + data.date + "</span></div>" +
+        slotsHtml +
+        "<div><span class='label'>狀態：</span><span class='value'>" + data.status + "</span></div>" +
+        "</div>";
+      var partialBox = document.getElementById("partialCancelBox");
+      var rowsDiv    = document.getElementById("partialSlotRows");
+      rowsDiv.innerHTML = "";
+      if (foundSlotsArr.length > 1){
+        partialBox.style.display = "block";
+        document.getElementById("cancelAllCheck").checked = false;
+        foundSlotsArr.forEach(function(s){
+          var row = document.createElement("div"); row.className = "partial-slot-row";
+          var chk = document.createElement("input"); chk.type="checkbox"; chk.checked=true;
+          chk.dataset.time = s.time; chk.id = "pchk_"+s.time.replace(/[:\-]/g,"");
+          var lbl = document.createElement("label"); lbl.htmlFor=chk.id;
+          lbl.textContent = s.date + " " + s.time; lbl.style.cssText="font-size:0.9rem;cursor:pointer;min-width:160px";
+          var cnt = document.createElement("input"); cnt.type="number"; cnt.min=1; cnt.max=s.count; cnt.value=s.count;
+          cnt.id="pcnt_"+s.time.replace(/[:\-]/g,""); cnt.dataset.maxCount=s.count;
+          var unitLbl = document.createElement("span"); unitLbl.textContent="/ "+s.count+" 人";
+          unitLbl.style.cssText="font-size:0.8rem;color:#9e8e7a";
+          row.appendChild(chk); row.appendChild(lbl); row.appendChild(cnt); row.appendChild(unitLbl);
+          rowsDiv.appendChild(row);
+        });
+      } else { partialBox.style.display="none"; }
       document.getElementById("cancelResult").classList.add("visible");
     })
-    .catch(function() {
-      btn.disabled = false;
-      btn.textContent = "查詢預約";
-      showCancelMessage("連線失敗，請稍後再試。", "error");
-    });
+    .catch(function(){ btn.disabled=false; btn.textContent="查詢預約"; showCancelMessage("連線失敗，請稍後再試。","error"); });
 }
 
-function confirmCancel() {
-  if (!cancelToken) return;
+function toggleCancelAll(checked){
+  document.querySelectorAll("#partialSlotRows input[type=checkbox]").forEach(function(c){ c.checked=checked; });
+  if (checked){
+    foundSlotsArr.forEach(function(s){
+      var cnt = document.getElementById("pcnt_"+s.time.replace(/[:\-]/g,""));
+      if (cnt) cnt.value = s.count;
+    });
+  }
+}
+
+function confirmCancel(){
+  var cancelSlots = [];
+  var partialBox = document.getElementById("partialCancelBox");
+  if (partialBox.style.display !== "none" && foundSlotsArr.length > 1){
+    document.querySelectorAll("#partialSlotRows input[type=checkbox]").forEach(function(chk){
+      if (chk.checked){
+        var t = chk.dataset.time;
+        var cnt = document.getElementById("pcnt_"+t.replace(/[:\-]/g,""));
+        cancelSlots.push({ time:t, count:cnt?(parseInt(cnt.value)||1):1 });
+      }
+    });
+    if (!cancelSlots.length){ showCancelMessage("請至少選擇一個要取消的時段","error"); return; }
+  } else {
+    foundSlotsArr.forEach(function(s){ cancelSlots.push({ time:s.time, count:s.count }); });
+  }
   if (!confirm("確定要取消此預約嗎？")) return;
   var btn = document.getElementById("confirmCancelBtn");
-  btn.disabled = true;
-  btn.textContent = "處理中...";
-
-  // 送出取消申請給 GS，讓 Python 判斷取消政策
-  var url = APPS_SCRIPT_URL + "?action=requestCancel&booking_id=" + encodeURIComponent(cancelToken);
-  fetchWithRetry(url)
-    .then(function(data) {
-      if (data.status === "ok") {
-        document.getElementById("cancelResult").classList.remove("visible");
-        var msg = data.need_review
-          ? "⏳ 取消申請已送出，需等待店家審核，結果將以 Email 通知您，請留意信箱。"
-          : "✅ 取消申請已成功，店家將以 Email 確認通知。";
-        showCancelMessage(msg, "success");
-        document.getElementById("cancelBookingId").value = "";
-        document.getElementById("cancelName").value = "";
-        document.getElementById("cancelPhone").value = "";
-        document.getElementById("cancelTimeSlot").value = "";
-        cancelToken = "";
-      } else {
-        showCancelMessage(data.message || "取消失敗，請聯繫店家。", "error");
-        btn.disabled = false;
-        btn.textContent = "確認取消此預約";
-      }
-    })
-    .catch(function() {
-      showCancelMessage("連線失敗，請稍後再試。", "error");
-      btn.disabled = false;
-      btn.textContent = "確認取消此預約";
+  btn.disabled = true; btn.textContent = "處理中...";
+  var payload = { action:"requestCancel", booking_id:foundBookingId, cancelSlots:cancelSlots };
+  if (foundCancelToken) payload.token = foundCancelToken;
+  function handleResult(data){
+    if (data.status === "ok"){
+      document.getElementById("cancelResult").classList.remove("visible");
+      showCancelMessage("⏳ 取消申請已送出，需等待店家審核，結果將以 Email 通知您，請留意信箱。","success");
+      ["cancelBookingId","cancelName","cancelPhone","cancelTimeSlot"].forEach(function(id){ document.getElementById(id).value=""; });
+      foundCancelToken=""; foundBookingId=""; foundSlotsArr=[];
+    } else {
+      showCancelMessage(data.message||"取消失敗，請聯繫店家。","error");
+      btn.disabled=false; btn.textContent="確認送出取消申請";
+    }
+  }
+  fetch(APPS_SCRIPT_URL, { method:"POST", body:JSON.stringify(payload), headers:{"Content-Type":"application/json"} })
+    .then(function(r){ return r.json(); }).then(handleResult)
+    .catch(function(){
+      var url = APPS_SCRIPT_URL + "?action=requestCancel&booking_id="+encodeURIComponent(foundBookingId);
+      if (foundCancelToken) url += "&token="+encodeURIComponent(foundCancelToken);
+      fetch(url).then(function(r){ return r.json(); }).then(handleResult)
+        .catch(function(){ showCancelMessage("連線失敗，請稍後再試。","error"); btn.disabled=false; btn.textContent="確認送出取消申請"; });
     });
 }
 
-setInterval(loadSlotsJson, 30 * 1000); // 每30秒自動刷新時段
+setInterval(loadSlotsJson, 30000);
 </script>
 </body>
 </html>
