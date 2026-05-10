@@ -102,9 +102,24 @@ footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; b
 /* 部分取消時段選擇 */
 .partial-cancel-box { margin-top: 1rem; border-top: 1px solid #e8ddd0; padding-top: 1rem; }
 .partial-cancel-box h4 { font-size: 0.95rem; color: #c0392b; margin-bottom: 0.7rem; }
-.partial-slot-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 0.9rem; }
-.partial-slot-row input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
-.partial-slot-row input[type=number] { width: 70px; padding: 0.3rem 0.5rem; }
+.partial-slot-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px; flex-wrap: wrap;
+  padding: 6px 0; border-bottom: 1px solid #f0e8d8;
+}
+.partial-slot-row:last-child { border-bottom: none; }
+.partial-slot-row input[type=checkbox] {
+  width: 20px; height: 20px; flex-shrink: 0;
+  cursor: pointer; accent-color: #c0392b;
+}
+.partial-slot-row label {
+  flex: 1; min-width: 140px; font-size: 0.9rem; cursor: pointer;
+}
+.partial-slot-row input[type=number] {
+  width: 65px; padding: 0.3rem 0.5rem;
+  border: 1px solid #e8ddd0; border-radius: 6px;
+}
+.partial-slot-row span { font-size: 0.8rem; color: #9e8e7a; }
 </style>
 </head>
 <body>
@@ -142,9 +157,17 @@ footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; b
     <!-- 攜伴區塊 -->
     <div class="form-group">
       <label>是否攜伴？</label>
-      <div style="display:flex;gap:16px;margin-top:6px">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="withCompanion" value="no" checked onchange="toggleCompanion(this.value)"> 否，只有我一人</label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="withCompanion" value="yes" onchange="toggleCompanion(this.value)"> 是，有攜伴</label>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.95rem">
+          <input type="radio" name="withCompanion" value="no" checked onchange="toggleCompanion(this.value)"
+                 style="width:18px;height:18px;flex-shrink:0;accent-color:#8b6914">
+          <span>否，只有我一人</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.95rem">
+          <input type="radio" name="withCompanion" value="yes" onchange="toggleCompanion(this.value)"
+                 style="width:18px;height:18px;flex-shrink:0;accent-color:#8b6914">
+          <span>是，有攜伴</span>
+        </label>
       </div>
     </div>
     <div id="companionSection" style="display:none">
@@ -179,8 +202,11 @@ footer { text-align: center; padding: 2rem; color: #9e8e7a; font-size: 0.8rem; b
       <div class="partial-cancel-box" id="partialCancelBox" style="display:none">
         <h4>選擇要取消的時段（可選部分取消）</h4>
         <div id="partialSlotRows"></div>
-        <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;font-size:0.9rem">
-          <input type="checkbox" id="cancelAllCheck" onchange="toggleCancelAll(this.checked)"> 整單全部取消
+        <label style="display:flex;align-items:center;gap:10px;margin-top:12px;cursor:pointer;
+                    font-size:0.95rem;padding:8px 0;border-top:1px solid #e8ddd0">
+          <input type="checkbox" id="cancelAllCheck" onchange="toggleCancelAll(this.checked)"
+                 style="width:20px;height:20px;flex-shrink:0;accent-color:#c0392b">
+          <span style="color:#c0392b;font-weight:500">整單全部取消</span>
         </label>
       </div>
       <button class="confirm-cancel-btn" id="confirmCancelBtn" onclick="confirmCancel()">確認送出取消申請</button>
@@ -523,11 +549,14 @@ function queryBooking(){
       } else {
         slotsHtml = "<div><span class='label'>時段：</span><span class='value'>" + timeSlot + "</span></div>";
       }
+      // 清理日期 ISO 格式
+      var _dispDate = (data.date||"").toString();
+      if (_dispDate.indexOf("T") >= 0) _dispDate = _dispDate.split("T")[0];
       document.getElementById("cancelBookingDetail").innerHTML =
         "<div class='booking-detail'>" +
         "<div><span class='label'>預約單號：</span><span class='value'>" + foundBookingId + "</span></div>" +
         "<div><span class='label'>姓名：</span><span class='value'>" + data.name + "</span></div>" +
-        "<div><span class='label'>日期：</span><span class='value'>" + data.date + "</span></div>" +
+        "<div><span class='label'>日期：</span><span class='value'>" + _dispDate + "</span></div>" +
         slotsHtml +
         "<div><span class='label'>狀態：</span><span class='value'>" + data.status + "</span></div>" +
         "</div>";
