@@ -320,9 +320,13 @@ function showSlots(dateStr){
   var now = new Date();
   var todayStr = now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
   if (dateStr === todayStr){
+    // 今日：過濾掉「開始時間已過」的時段（不等結束，只要開始時間 <= 現在就不能選）
     slots = slots.filter(function(s){
-      var end = s.time.split("-")[1]; if (!end) return true;
-      var p = end.split(":"); var se = new Date(); se.setHours(+p[0],+p[1],0,0); return se > now;
+      var startStr = s.time.split("-")[0]; if (!startStr) return true;
+      var ps = startStr.trim().split(":");
+      var startTime = new Date();
+      startTime.setHours(+ps[0], +ps[1], 0, 0);
+      return startTime > now;  // 開始時間還沒到才顯示
     });
     if (!slots.length){ section.innerHTML = '<div class="no-slots">今日時段已全部結束</div>'; return; }
   }
@@ -381,7 +385,21 @@ function buildCompanionSlots(){
   var needSlots = Math.ceil(totalCount / quota);
   var note = document.getElementById("companionNote");
   var rowsDiv = document.getElementById("companionSlotRows");
-  var avail = slots.filter(function(s){ return s.available; });
+  // 攜伴時段也過濾今日已過的時段
+  var now_c = new Date();
+  var todayStr_c = now_c.getFullYear()+"-"+String(now_c.getMonth()+1).padStart(2,"0")+"-"+String(now_c.getDate()).padStart(2,"0");
+  var avail = slots.filter(function(s){
+    if (!s.available) return false;
+    if (selectedDate === todayStr_c){
+      var startStr = s.time.split("-")[0];
+      if (startStr){
+        var ps = startStr.trim().split(":");
+        var st = new Date(); st.setHours(+ps[0],+ps[1],0,0);
+        return st > now_c;
+      }
+    }
+    return true;
+  });
   if (needSlots === 1){
     note.textContent = "✅ 此時段可容納 " + quota + " 位，本時段即可。";
     rowsDiv.innerHTML = "";
