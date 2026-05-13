@@ -232,35 +232,57 @@ var companionSlotSelections = {};
 
 fetch("site.json?t=" + Date.now())
   .then(function(r){ return r.json(); })
-  .then(function(data){ if (data.apps_script_url) APPS_SCRIPT_URL = data.apps_script_url; })
-  .catch(function(){});
+  .then(function(data){
+    if (data.apps_script_url) APPS_SCRIPT_URL = data.apps_script_url;
+  })
+  .catch(function(){})
+  .finally(function(){
+    // 取得 APPS_SCRIPT_URL 後再載入時段（讓 getSlotsLive 能用上）
+    loadSlotsJson();
+  });
 
 window.onload = function() {
   var now = new Date();
   currentYear  = now.getFullYear();
   currentMonth = now.getMonth();
   renderCalendar();
-  loadSlotsJson();
+  // 不在這裡呼叫 loadSlotsJson(),等 site.json 載入後才呼叫,避免先用靜態檔再被即時檔覆蓋（閃爍）
 };
 
 function loadSlotsJson() {
-  fetch(SLOTS_JSON + "?t=" + Date.now())
-    .then(function(r){ if (!r.ok) throw new Error(); return r.json(); })
-    .then(function(data){
-      slotsData = data.slots || {};
-      var shop  = data.shop  || {};
-      if (shop.shop_name)    document.getElementById("shopName").textContent   = shop.shop_name;
-      if (shop.shop_address) document.getElementById("infoAddress").textContent = shop.shop_address;
-      if (shop.shop_phone)   document.getElementById("infoPhone").textContent   = shop.shop_phone;
-      if (shop.shop_hours){
-        document.getElementById("infoHours").textContent = shop.shop_hours;
-        document.getElementById("shopHours").textContent = shop.shop_hours;
-      }
-      document.getElementById("lastUpdate").textContent = "資料更新時間：" + new Date().toLocaleTimeString("zh-TW");
-      renderCalendar();
-      if (selectedDate) showSlots(selectedDate);
-    })
-    .catch(function(){ slotsData = {}; renderCalendar(); });
+  // 修正 Bug 3：先嘗試 GS 即時計算（後台沒開時也能扣除已預約名額）；
+  // GS 失敗才退回 slots.json（GitHub 靜態檔，依賴後台 Python 上傳）
+  function applyData(data, source){
+    slotsData = data.slots || {};
+    var shop  = data.shop  || {};
+    if (shop.shop_name)    document.getElementById("shopName").textContent   = shop.shop_name;
+    if (shop.shop_address) document.getElementById("infoAddress").textContent = shop.shop_address;
+    if (shop.shop_phone)   document.getElementById("infoPhone").textContent   = shop.shop_phone;
+    if (shop.shop_hours){
+      document.getElementById("infoHours").textContent = shop.shop_hours;
+      document.getElementById("shopHours").textContent = shop.shop_hours;
+    }
+    document.getElementById("lastUpdate").textContent = "資料更新時間：" + new Date().toLocaleTimeString("zh-TW") + (source ? "（" + source + "）" : "");
+    renderCalendar();
+    if (selectedDate) showSlots(selectedDate);
+  }
+  function fallbackStaticJson(){
+    fetch(SLOTS_JSON + "?t=" + Date.now())
+      .then(function(r){ if (!r.ok) throw new Error(); return r.json(); })
+      .then(function(data){ applyData(data, "靜態"); })
+      .catch(function(){ slotsData = {}; renderCalendar(); });
+  }
+  if (APPS_SCRIPT_URL) {
+    fetch(APPS_SCRIPT_URL + "?action=getSlotsLive&t=" + Date.now())
+      .then(function(r){ if (!r.ok) throw new Error(); return r.json(); })
+      .then(function(data){
+        if (data && data._live && data.slots) applyData(data, "即時");
+        else fallbackStaticJson();
+      })
+      .catch(fallbackStaticJson);
+  } else {
+    fallbackStaticJson();
+  }
 }
 
 function renderCalendar() {
@@ -381,8 +403,18 @@ function buildCompanionSlots(){
   for (var i = 0; i < slots.length; i++){
     if (slots[i].time === selectedTime){ curSlot = slots[i]; break; }
   }
-  var quota = curSlot ? (curSlot.quota || 1) : 1;
-  var needSlots = Math.ceil(totalCount / quota);
+  // 修正：用 remaining（實際剩餘）做為「此時段可容納人數上限」，而非 quota（總量）
+  // 避免有人選擇剩 1 位的時段卻填 2 人也被判定為合理
+  function effCap(s){
+    // 預設取 remaining；若 remaining 未定義（舊資料）才退回 quota
+    var r = (s && s.remaining !== undefined) ? parseInt(s.remaining) : parseInt(s && s.quota || 1);
+    if (isNaN(r) || r < 0) r = 0;
+    return r;
+  }
+  var curCap = curSlot ? effCap(curSlot) : 1;
+  // 已選的主時段必須至少有 1 位才能進來這裡，這裡防呆
+  if (curCap < 1) curCap = 1;
+  var needSlots = Math.ceil(totalCount / curCap);
   var note = document.getElementById("companionNote");
   var rowsDiv = document.getElementById("companionSlotRows");
   // 攜伴時段也過濾今日已過的時段
@@ -390,6 +422,7 @@ function buildCompanionSlots(){
   var todayStr_c = now_c.getFullYear()+"-"+String(now_c.getMonth()+1).padStart(2,"0")+"-"+String(now_c.getDate()).padStart(2,"0");
   var avail = slots.filter(function(s){
     if (!s.available) return false;
+    if (effCap(s) < 1) return false;  // 剩餘 0 不顯示
     if (selectedDate === todayStr_c){
       var startStr = s.time.split("-")[0];
       if (startStr){
@@ -401,17 +434,19 @@ function buildCompanionSlots(){
     return true;
   });
   if (needSlots === 1){
-    note.textContent = "✅ 此時段可容納 " + quota + " 位，本時段即可。";
+    note.textContent = "✅ 此時段剩 " + curCap + " 位，可容納 " + totalCount + " 人。";
     rowsDiv.innerHTML = "";
     companionSlotSelections = {};
-    companionSlotSelections[selectedTime] = totalCount;
+    // 主時段預設帶 totalCount，且不可超過 curCap
+    companionSlotSelections[selectedTime] = Math.min(totalCount, curCap);
     updateSelectedInfo(); return;
   }
-  note.textContent = "⚠️ 總計 " + totalCount + " 人，每時段上限 " + quota + " 位，需選擇 " + needSlots + " 個時段，各時段人數合計必須等於 " + totalCount + " 人。";
+  note.textContent = "⚠️ 總計 " + totalCount + " 人，此時段只剩 " + curCap + " 位，需再選其他時段，各時段人數合計必須等於 " + totalCount + " 人。";
   rowsDiv.innerHTML = "";
-  if (!companionSlotSelections[selectedTime]) companionSlotSelections[selectedTime] = quota;
+  if (!companionSlotSelections[selectedTime]) companionSlotSelections[selectedTime] = curCap;
   avail.forEach(function(s){
     var isMain = s.time === selectedTime;
+    var cap = effCap(s);
     var row = document.createElement("div");
     row.className = "slot-count-row";
     var chk = document.createElement("input");
@@ -422,21 +457,41 @@ function buildCompanionSlots(){
     lbl.textContent = s.time + (isMain ? "（已選）" : "");
     lbl.style.cssText = "font-size:0.9rem;min-width:120px;cursor:pointer";
     var cnt = document.createElement("input");
-    cnt.type = "number"; cnt.min = 1; cnt.max = s.quota || quota;
-    cnt.value = companionSlotSelections[s.time] || (isMain ? quota : 1);
+    cnt.type = "number"; cnt.min = 1; cnt.max = cap;
+    // 確保預設值不超過該時段剩餘
+    var defVal = companionSlotSelections[s.time];
+    if (defVal === undefined) defVal = isMain ? cap : 1;
+    if (defVal > cap) defVal = cap;
+    cnt.value = defVal;
+    if (companionSlotSelections[s.time] !== undefined) companionSlotSelections[s.time] = defVal;
     cnt.style.width = "70px";
     cnt.disabled = !chk.checked;
     var unitLbl = document.createElement("span");
-    unitLbl.textContent = "人　(上限 " + (s.quota || quota) + " 人)";
+    unitLbl.textContent = "人　(剩 " + cap + " 位)";
     unitLbl.style.cssText = "font-size:0.8rem;color:#9e8e7a";
-    chk.onchange = (function(_s, _cnt){
+    chk.onchange = (function(_s, _cnt, _cap){
       return function(){
-        if (this.checked){ companionSlotSelections[_s.time] = parseInt(_cnt.value)||1; _cnt.disabled=false; }
-        else { delete companionSlotSelections[_s.time]; _cnt.disabled=true; }
+        if (this.checked){
+          var v = parseInt(_cnt.value)||1;
+          if (v > _cap) { v = _cap; _cnt.value = _cap; }
+          companionSlotSelections[_s.time] = v;
+          _cnt.disabled=false;
+        } else {
+          delete companionSlotSelections[_s.time];
+          _cnt.disabled=true;
+        }
         validateCompanionTotal(totalCount);
       };
-    })(s, cnt);
-    cnt.oninput = (function(_s){ return function(){ companionSlotSelections[_s.time]=parseInt(this.value)||1; validateCompanionTotal(totalCount); }; })(s);
+    })(s, cnt, cap);
+    cnt.oninput = (function(_s, _cap){
+      return function(){
+        var v = parseInt(this.value)||1;
+        if (v > _cap){ v = _cap; this.value = _cap; }
+        if (v < 1){ v = 1; this.value = 1; }
+        companionSlotSelections[_s.time] = v;
+        validateCompanionTotal(totalCount);
+      };
+    })(s, cap);
     row.appendChild(chk); row.appendChild(lbl); row.appendChild(cnt); row.appendChild(unitLbl);
     rowsDiv.appendChild(row);
   });
@@ -446,9 +501,25 @@ function buildCompanionSlots(){
 
 function validateCompanionTotal(totalCount){
   var sum = 0;
-  Object.values(companionSlotSelections).forEach(function(v){ sum += parseInt(v)||0; });
+  var overflow = false;
+  Object.keys(companionSlotSelections).forEach(function(t){
+    var v = parseInt(companionSlotSelections[t])||0;
+    sum += v;
+    // 再次比對該時段剩餘
+    var slots = slotsData[selectedDate] || [];
+    for (var i = 0; i < slots.length; i++){
+      if (slots[i].time === t){
+        var cap = (slots[i].remaining !== undefined) ? parseInt(slots[i].remaining) : parseInt(slots[i].quota || 1);
+        if (v > cap) overflow = true;
+        break;
+      }
+    }
+  });
   var note = document.getElementById("companionNote");
-  if (sum !== totalCount){
+  if (overflow){
+    note.textContent = "❌ 有時段人數超過該時段剩餘名額，請修正！";
+    note.style.color = "#c0392b";
+  } else if (sum !== totalCount){
     note.textContent = "⚠️ 各時段合計 " + sum + " 人，必須等於 " + totalCount + " 人！";
     note.style.color = "#c0392b";
   } else {
@@ -475,6 +546,20 @@ function submitBooking(){
     var sum = 0;
     Object.values(companionSlotSelections).forEach(function(v){ sum += parseInt(v)||0; });
     if (sum !== totalCount){ showMessage("各時段人數合計（"+sum+"）不等於總人數（"+totalCount+"），請修正","error"); return; }
+    // 最終防呆：每個選擇的時段人數不能超過該時段剩餘
+    var overflowTime = "";
+    var slotsArrCheck = slotsData[selectedDate] || [];
+    Object.keys(companionSlotSelections).forEach(function(t){
+      var v = parseInt(companionSlotSelections[t])||0;
+      for (var i = 0; i < slotsArrCheck.length; i++){
+        if (slotsArrCheck[i].time === t){
+          var cap = (slotsArrCheck[i].remaining !== undefined) ? parseInt(slotsArrCheck[i].remaining) : parseInt(slotsArrCheck[i].quota || 1);
+          if (v > cap) overflowTime = t + "（剩 " + cap + " 位，您填 " + v + "）";
+          break;
+        }
+      }
+    });
+    if (overflowTime){ showMessage("時段「"+overflowTime+"」超過剩餘名額，請修正","error"); return; }
     var times = Object.keys(companionSlotSelections).sort();
     times.forEach(function(t){ slotsArr.push({ date: selectedDate, time: t, count: parseInt(companionSlotSelections[t])||1 }); });
   } else {
@@ -486,7 +571,10 @@ function submitBooking(){
   var payload = { action:"addBooking", name:name, phone:phone, email:email, lineId:lineId,
     date:selectedDate, time:selectedTime, symptom:symptom,
     slots:JSON.stringify(slotsArr), totalCount:totalCount };
+  var _submitDone = false;
   function handleOk(data){
+    if (_submitDone) return;
+    _submitDone = true;
     if (data.status === "ok"){
       showMessage("✅ 預約申請已送出！請留意 Email 信箱，確認信將附上預約單號。","success");
       document.getElementById("formSection").classList.remove("visible");
@@ -496,20 +584,27 @@ function submitBooking(){
       companionSlotSelections = {}; selectedDate = null; selectedTime = null;
       renderCalendar(); loadSlotsJson();
     } else {
-      showMessage("送出失敗，請稍後再試。","error");
+      // 顯示伺服器回傳的具體錯誤訊息（如容量不足）
+      showMessage(data.message || "送出失敗，請稍後再試。","error");
       btn.disabled = false; btn.textContent = "送出預約申請";
+      // 容量不足時自動刷新時段資料,讓使用者看到最新狀態
+      loadSlotsJson();
     }
   }
   fetch(APPS_SCRIPT_URL, { method:"POST", body:JSON.stringify(payload), headers:{"Content-Type":"application/json"} })
     .then(function(r){ return r.json(); }).then(handleOk)
     .catch(function(){
+      if (_submitDone) return;
       var params = "?action=addBooking&name="+encodeURIComponent(name)+"&phone="+encodeURIComponent(phone)+
         "&email="+encodeURIComponent(email)+"&lineId="+encodeURIComponent(lineId)+
         "&date="+encodeURIComponent(selectedDate)+"&time="+encodeURIComponent(selectedTime)+
         "&symptom="+encodeURIComponent(symptom)+"&slots="+encodeURIComponent(JSON.stringify(slotsArr))+
         "&totalCount="+totalCount;
       fetch(APPS_SCRIPT_URL + params).then(function(r){ return r.json(); }).then(handleOk)
-        .catch(function(){ showMessage("連線失敗，請稍後再試。","error"); btn.disabled=false; btn.textContent="送出預約申請"; });
+        .catch(function(){
+          if (_submitDone) return;
+          showMessage("連線失敗，請稍後再試。","error"); btn.disabled=false; btn.textContent="送出預約申請";
+        });
     });
 }
 
@@ -633,7 +728,10 @@ function confirmCancel(){
   btn.disabled = true; btn.textContent = "處理中...";
   var payload = { action:"requestCancel", booking_id:foundBookingId, cancelSlots:cancelSlots };
   if (foundCancelToken) payload.token = foundCancelToken;
+  var _done = false;  // 防止 POST 成功後又被 fallback GET 重複觸發
   function handleResult(data){
+    if (_done) return;
+    _done = true;
     if (data.status === "ok"){
       document.getElementById("cancelResult").classList.remove("visible");
       showCancelMessage("⏳ 取消申請已送出，需等待店家審核，結果將以 Email 通知您，請留意信箱。","success");
@@ -647,10 +745,14 @@ function confirmCancel(){
   fetch(APPS_SCRIPT_URL, { method:"POST", body:JSON.stringify(payload), headers:{"Content-Type":"application/json"} })
     .then(function(r){ return r.json(); }).then(handleResult)
     .catch(function(){
+      if (_done) return;
       var url = APPS_SCRIPT_URL + "?action=requestCancel&booking_id="+encodeURIComponent(foundBookingId);
       if (foundCancelToken) url += "&token="+encodeURIComponent(foundCancelToken);
       fetch(url).then(function(r){ return r.json(); }).then(handleResult)
-        .catch(function(){ showCancelMessage("連線失敗，請稍後再試。","error"); btn.disabled=false; btn.textContent="確認送出取消申請"; });
+        .catch(function(){
+          if (_done) return;
+          showCancelMessage("連線失敗，請稍後再試。","error"); btn.disabled=false; btn.textContent="確認送出取消申請";
+        });
     });
 }
 
