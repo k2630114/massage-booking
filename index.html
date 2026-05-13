@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>推拿養生館</title>
+<title>七喜經絡推拿</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -322,7 +322,7 @@ footer {
 </div>
 
 <nav>
-  <div class="nav-logo" id="navLogo">推拿養生館</div>
+  <div class="nav-logo" id="navLogo">七喜經絡推拿</div>
   <div class="nav-links">
     <a href="#services">服務項目</a>
     <a href="#pricing">價目表</a>
@@ -446,7 +446,7 @@ function loadSiteData() {
 }
 
 function renderSite(data) {
-  var name = data.shop_name || "推拿養生館";
+  var name = data.shop_name || "七喜經絡推拿";
   document.title = name;
   document.getElementById("navLogo").textContent = name;
   document.getElementById("heroTitle").innerHTML = name + "<br><span style='color:var(--accent)'>專業推拿養生</span>";
@@ -467,7 +467,7 @@ function renderSite(data) {
   }
   if (data.shop_phone) document.getElementById("contactPhone").textContent = data.shop_phone;
   if (data.shop_hours) document.getElementById("contactHours").textContent = data.shop_hours;
-  document.getElementById("footerText").textContent = "© " + name + " 版權所有";
+  document.getElementById("footerText").textContent = "© " + "林氏企業:最帥的林" + " 版權所有";
 
   // 服務項目
   if (data.shop_services && data.shop_services.length > 0) {
